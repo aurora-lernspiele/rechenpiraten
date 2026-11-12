@@ -1,0 +1,1415 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rechenpiraten Kinderversion</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Grandstander:wght@600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: Seekarte mit Inselroute als Startbildschirm; Spielbildschirm = Rechenheft-Blatt (kariert) + Papagei + Ziffernblock */
+:root{
+  --abyss:#0b2c3b; --abyss-2:#11394b; --line-dark:#2a5a6c;
+  --sea:#16708a; --shallow:#3bb3c3; --foam:#eaf8f7; --foam-dim:#a9cfd4;
+  --sand:#f5dca3; --paper:#fffaf0; --grid:#d3e3ea; --ink:#16323f; --ink-soft:#5a7480;
+  --gold:#ffc63f; --gold-deep:#c98a06; --coral:#e8584a; --coral-soft:#ffe3de; --palm:#2f9a57; --palm-soft:#def3e3; --wood:#8a5a33;
+  --font-display:"Grandstander","Comic Sans MS","Chalkboard SE",system-ui,sans-serif;
+  --font-body:"Andika","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--abyss);color:var(--foam);font-family:var(--font-body);font-size:17px;line-height:1.45}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.app{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;display:flex;flex-direction:column;gap:18px}
+
+/* Kopfzeile */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{width:54px;height:auto;flex:none}
+h1{font-family:var(--font-display);font-weight:800;font-size:clamp(1.6rem,4.2vw,2.5rem);line-height:1;margin:0;color:var(--sand);letter-spacing:.01em;text-wrap:balance}
+h1 span{color:var(--gold)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.coins{display:inline-flex;align-items:center;gap:6px;background:var(--abyss-2);border:2px solid var(--line-dark);border-radius:99px;padding:5px 14px 5px 6px;font:800 1.1rem var(--font-display);color:var(--gold);font-variant-numeric:tabular-nums}
+.coins svg{width:26px;height:26px}
+.iconbtn{background:var(--abyss-2);border:2px solid var(--line-dark);color:var(--foam);border-radius:99px;padding:7px 14px;font:700 .95rem var(--font-body);cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.iconbtn:hover{border-color:var(--shallow)}
+.iconbtn svg{width:18px;height:18px}
+
+/* Karte */
+.intro{margin:0;color:var(--foam-dim);max-width:62ch}
+.windbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.windbar .lbl{font:800 1rem var(--font-display);color:var(--sand);margin-right:4px}
+.wind{background:var(--abyss-2);border:2px solid var(--line-dark);color:var(--foam);border-radius:14px;padding:6px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;min-width:96px}
+.wind b{font:800 .98rem var(--font-display)}
+.wind small{font-size:.8rem;color:var(--foam-dim)}
+.wind[aria-pressed="true"]{background:var(--gold);border-color:var(--gold-deep);color:var(--ink)}
+.wind[aria-pressed="true"] small{color:var(--ink)}
+.map{position:relative;width:100%;aspect-ratio:16/10;border-radius:28px;overflow:hidden;border:4px solid #0a5468;
+  background:
+    radial-gradient(circle at 20% 30%,rgba(255,255,255,.10) 0 2px,transparent 3px) 0 0/46px 46px,
+    radial-gradient(ellipse at 30% 20%,#2a98ae 0%,transparent 55%),
+    radial-gradient(ellipse at 80% 85%,#0f5c73 0%,transparent 60%),
+    linear-gradient(160deg,#1f8aa1,#135f77);}
+.route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.route path,.route polyline{fill:none;stroke:var(--sand);stroke-width:3;stroke-dasharray:2 9;stroke-linecap:round;vector-effect:non-scaling-stroke;opacity:.85}
+.route .bonus{stroke:var(--foam);stroke-dasharray:1 7;opacity:.6}
+.route .tall{display:none}
+.compass{position:absolute;right:2.2%;bottom:3%;width:clamp(56px,9%,96px);opacity:.75;pointer-events:none}
+.isl{position:absolute;left:var(--wx);top:var(--wy);transform:translate(-50%,-50%);width:clamp(76px,13%,128px);background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;color:var(--ink);z-index:2}
+.isl.big{width:clamp(96px,17%,160px)}
+.isl svg.art{width:100%;height:auto;display:block;transition:transform .2s}
+.isl:hover svg.art{transform:translateY(-4px) rotate(-2deg)}
+.tag{display:flex;flex-direction:column;align-items:center;background:var(--sand);border-radius:10px;padding:2px 9px 3px;box-shadow:0 3px 0 rgba(0,0,0,.25);white-space:nowrap;margin-top:-6px}
+.tag b{font:800 .86rem var(--font-display);line-height:1.15}
+.tag .st{font-size:.8rem;letter-spacing:.08em;color:#c9b27a;line-height:1}
+.tag .st i{font-style:normal;color:var(--gold-deep)}
+.badge{position:absolute;top:2%;left:4%;min-width:26px;height:26px;border-radius:99px;background:var(--ink);color:var(--sand);font:800 .85rem var(--font-display);display:grid;place-items:center;padding:0 6px;border:2px solid var(--sand)}
+.isl.bonus .badge{background:var(--coral);color:#fff;border-color:#fff;font-size:.72rem;letter-spacing:.02em}
+.isl.locked svg.art{filter:grayscale(.85) brightness(.85);opacity:.55}
+.isl.locked .tag{background:#b9c7cc;color:#4e6470}
+.isl.locked .badge{background:#4e6470;color:#dfe8eb;border-color:#dfe8eb}
+.isl.done .tag{background:#fff2c9}
+.ship{position:absolute;left:var(--sx);top:var(--sy);transform:translate(-50%,-50%);width:clamp(48px,7.5%,78px);z-index:3;pointer-events:none;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translate(-50%,-50%) rotate(-3deg)}50%{transform:translate(-50%,-58%) rotate(3deg)}}
+@media (max-width:639px){
+  .map{aspect-ratio:10/16}
+  .route .wide{display:none}.route .tall{display:inline}
+  .isl{left:var(--tx);top:var(--ty);width:21%}
+  .isl.big{width:27%}
+  .tag b{font-size:.78rem}
+  .badge{min-width:22px;height:22px;font-size:.75rem}
+  .ship{left:var(--stx);top:var(--sty);width:14%}
+  .compass{display:none}
+}
+.below{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.below{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--abyss-2);border:2px solid var(--line-dark);border-radius:20px;padding:16px 18px}
+.panel h2{font:800 1.2rem var(--font-display);color:var(--sand);margin:0 0 6px}
+.panel p{margin:0 0 8px;color:var(--foam-dim)}
+.panel p:last-child{margin-bottom:0}
+.mini{font:700 1.35rem var(--font-body);color:var(--foam);display:flex;flex-wrap:wrap;gap:.3em .4em;align-items:baseline;margin:6px 0 4px}
+.mini .arc path{stroke:var(--sand)}
+.mini .slot.filled{font-size:.9em}
+
+/* Spielbildschirm */
+.playbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.pb-title{display:flex;flex-direction:column;min-width:9em;flex:1 1 9em}
+.pb-title b{font:800 1.35rem var(--font-display);color:var(--sand);line-height:1.1}
+.pb-title span{font-size:.92rem;color:var(--foam-dim)}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots span{width:14px;height:14px;border-radius:50%;background:#24505f;border:2px solid #2f6577}
+.dots .cur{background:var(--gold);border-color:var(--gold)}
+.dots .ok{background:var(--palm);border-color:var(--palm)}
+.dots .half{background:var(--gold-deep);border-color:var(--gold-deep)}
+.dots .miss{background:var(--coral);border-color:var(--coral)}
+.play-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,330px);gap:18px;align-items:start}
+@media (max-width:780px){.play-grid{grid-template-columns:minmax(0,1fr)}}
+.sheet{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px;background-position:-1px -1px;color:var(--ink);border-radius:22px;padding:18px clamp(14px,3vw,30px) 26px;box-shadow:0 8px 0 rgba(0,0,0,.22);min-height:330px;display:flex;flex-direction:column;gap:16px}
+.timer{display:flex;align-items:center;gap:10px;font:700 .95rem var(--font-body);color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.timer svg{width:20px;height:20px;flex:none}
+.tbar{flex:1;height:12px;background:#e7dcc2;border-radius:99px;overflow:hidden}
+.tbar i{display:block;height:100%;width:100%;background:var(--sea);border-radius:99px}
+.tbar i.warn{background:var(--coral)}
+.instr{margin:0;font:800 1.12rem var(--font-display);color:var(--ink);text-align:center;text-wrap:balance}
+.calc{font-family:var(--font-body);font-weight:700;font-size:clamp(1.45rem,5.6vw,2.8rem);display:flex;flex-direction:column;align-items:center;gap:.18em;font-variant-numeric:tabular-nums;flex:1;justify-content:center}
+.board-wrap{width:100%;max-width:100%;overflow:hidden;padding-bottom:4px}
+.board{display:grid;column-gap:.32em;row-gap:.15em;align-items:start;justify-items:center;width:max-content;margin:0 auto}
+.c1,.c2{display:flex;justify-content:center;align-items:flex-start}
+.slot.pickslot{cursor:pointer;font:inherit;padding:0}
+.slot.pickslot:hover,.slot.pickslot:focus-visible{border-color:var(--sea);border-style:solid;outline:none}
+.slot.wait{border:3px dashed #b5c4ca;background:transparent;min-width:1.8em;height:1.2em}
+.slot.active{border-color:var(--sea);box-shadow:0 0 0 4px rgba(59,179,195,.3)}
+.num.qm{color:#b5c4ca}
+.grp-row.sel{background:rgba(255,198,63,.75)}
+.dpair{display:flex;gap:.3em}
+.num.right{color:var(--palm)}
+.line{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:.26em;line-height:1.25;max-width:100%}
+.calc-in .line{justify-content:flex-start}
+.line.old{color:var(--ink-soft)}
+.eq.ph{visibility:hidden}
+.slot.filled{border-color:var(--palm);background:var(--palm-soft);color:var(--palm)}
+.line.old .grp-row{background:rgba(255,198,63,.22)}
+.eq{color:var(--ink-soft)}
+.op{font:inherit;line-height:1.1;color:var(--ink);background:#fff;border:3px dashed var(--sea);border-radius:14px;padding:0 .16em;min-width:1.15em;cursor:pointer}
+.op:hover,.op:focus-visible{background:var(--gold);border-style:solid;outline:none}
+.grp{display:inline-flex;flex-direction:column;align-items:center}
+.grp-row{display:flex;gap:.26em;border-radius:12px;padding:0 .18em}
+.grp-row.on{background:rgba(255,198,63,.42)}
+.arc{display:block;width:100%;height:.36em;overflow:visible}
+@keyframes draw{from{stroke-dashoffset:400}to{stroke-dashoffset:0}}
+.arc.draw path{stroke-dasharray:400;animation:draw .45s ease-out}
+.arc-space{display:block;height:.36em}
+.arc path{fill:none;stroke:var(--ink);stroke-width:3;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.slot{min-width:2.3em;padding:0 .2em;line-height:1.15;border:3px solid var(--ink);border-radius:12px;background:#fff;text-align:center;font-size:.9em}
+.slot.empty{color:#b5c4ca}
+.num.final{border-bottom:7px double var(--palm);padding:0 .08em;color:var(--palm)}
+.pop{display:inline-block;animation:pop .45s ease-out}
+@keyframes pop{0%{transform:scale(.4);color:var(--gold-deep)}70%{transform:scale(1.18)}100%{transform:scale(1)}}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.log{border:3px solid var(--wood);border-radius:16px;background:rgba(255,250,240,.88);padding:10px clamp(8px,2vw,14px) 14px}
+.log-head{margin:0 0 4px;font:800 .95rem var(--font-display);color:var(--wood);letter-spacing:.04em;text-transform:uppercase}
+.num.claimed{font-family:var(--font-display);font-weight:600;color:#3f5f9e}
+.claim .num.struck{text-decoration:line-through 4px var(--coral);color:var(--ink-soft)}
+.fixrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.3em;font-size:.8em}
+.fixrow span.l{font:800 .6em var(--font-display);color:var(--ink-soft)}
+.explain{background:#fff;border:2px solid var(--grid);border-radius:14px;padding:12px 16px;font-size:1.02rem}
+.explain p{margin:0 0 6px}
+.explain ol{margin:0;padding-left:1.4em;font-weight:700;font-variant-numeric:tabular-nums}
+.side{display:flex;flex-direction:column;gap:14px}
+.bubble{display:flex;gap:10px;align-items:flex-start}
+.bubble svg{width:58px;height:58px;flex:none}
+.say{flex:1;min-width:0;background:var(--paper);color:var(--ink);border-radius:18px;border-top-left-radius:4px;padding:11px 14px;font-size:1.03rem;line-height:1.4;min-height:3.3em}
+.say small{display:block;font:800 .78rem var(--font-display);color:var(--ink-soft);letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.bubble.good .say{background:var(--palm-soft)}
+.bubble.bad .say{background:var(--coral-soft)}
+.keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.key{min-height:62px;font:800 1.75rem var(--font-display);background:var(--abyss-2);color:var(--foam);border:2px solid var(--line-dark);border-radius:16px;box-shadow:0 5px 0 #061f2a;cursor:pointer;touch-action:manipulation}
+.key:active{transform:translateY(3px);box-shadow:0 2px 0 #061f2a}
+.key.ok{background:var(--gold);color:var(--ink);border-color:var(--gold-deep);box-shadow:0 5px 0 var(--gold-deep);font-size:1.25rem}
+.key.del{font-size:1.25rem}
+.key:disabled{opacity:.35;cursor:default;transform:none}
+.keyhint{margin:0;text-align:center;color:var(--foam-dim);font-size:.95rem}
+.btn{font:800 1.15rem var(--font-display);padding:14px 22px;border-radius:16px;border:0;background:var(--gold);color:var(--ink);box-shadow:0 5px 0 var(--gold-deep);cursor:pointer;touch-action:manipulation}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--gold-deep)}
+.btn.ghost{background:transparent;color:var(--foam);box-shadow:none;border:2px solid var(--line-dark);padding:10px 16px;font-size:1rem}
+.btn.ghost:active{transform:none}
+.btn.yes{background:var(--palm);color:#fff;box-shadow:0 5px 0 #1d6a3a}
+.btn.no{background:var(--coral);color:#fff;box-shadow:0 5px 0 #a8382d}
+.why{display:flex;flex-direction:column;gap:12px}
+.whybtn{text-align:left;display:flex;flex-direction:column;gap:2px;font-size:1.05rem;line-height:1.25}
+.whybtn small{font:700 .85rem var(--font-body);opacity:.8}
+.notes{margin-top:10px;background:#fff;border:2px dashed var(--wood);border-radius:12px;padding:8px 12px;font-family:var(--font-display);font-weight:600;color:#3f5f9e;font-variant-numeric:tabular-nums}
+.notes p{margin:0 0 2px;font-size:.9rem;color:var(--wood);font-weight:800}
+.notes ol{margin:0;padding-left:1.4em;font-size:1.1rem}
+.dots .bottle{border-radius:4px}
+.dots .dsep{width:2px;height:16px;background:var(--line-dark);margin:0 3px}
+.bottle-line{background:#e3f1f4;border-radius:12px;padding:6px 12px;font-weight:700}
+.skills{width:100%;max-width:440px;text-align:left;background:#fff;border:2px solid #efe6cf;border-radius:16px;padding:12px 16px}
+.skills h3{margin:0 0 6px;font:800 1.05rem var(--font-display)}
+.skills ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.skills li{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sk{font:800 .85rem var(--font-display);border-radius:99px;padding:2px 10px;white-space:nowrap}
+.sk.good{background:var(--palm-soft);color:#1d6a3a}
+.sk.mid{background:#fff0c4;color:#8a5f04}
+.sk.low{background:var(--coral-soft);color:#a8382d}
+.skills .tip{margin:8px 0 0;font-size:.95rem;color:var(--ink-soft)}
+.judge{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.judge .btn{min-height:76px;font-size:1.25rem}
+.donebox{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.gain{display:flex;align-items:center;justify-content:center;gap:8px;font:800 1.3rem var(--font-display);color:var(--gold)}
+.gain svg{width:30px;height:30px}
+
+/* Ergebnis */
+.result{max-width:620px;margin:0 auto;width:100%;background:var(--paper);color:var(--ink);border-radius:26px;padding:26px clamp(16px,4vw,34px);display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.22)}
+.result h2{font:800 clamp(1.6rem,5vw,2.2rem) var(--font-display);margin:0;text-wrap:balance}
+.result p{margin:0;max-width:46ch}
+.bigstars{display:flex;gap:10px}
+.bigstars svg{width:clamp(54px,14vw,78px);height:auto}
+.bigstars svg.on{animation:pop .5s ease-out both}
+.bigstars svg:nth-child(2){animation-delay:.15s}
+.bigstars svg:nth-child(3){animation-delay:.3s}
+.tally{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.tally span{min-width:40px;padding:4px 8px;border-radius:10px;font:800 .9rem var(--font-display);background:var(--palm-soft);color:#1d6a3a}
+.tally span.half{background:#fff0c4;color:#8a5f04}
+.tally span.miss{background:var(--coral-soft);color:#a8382d}
+.row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.newland{background:#fff2c9;border-radius:12px;padding:8px 14px;font-weight:700}
+
+/* Overlay */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(4,20,28,.74);display:flex;overflow:auto;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dialog{margin:auto;background:var(--paper);color:var(--ink);border-radius:24px;max-width:540px;width:100%;padding:22px clamp(16px,4vw,28px);display:flex;flex-direction:column;gap:14px}
+.dialog h2{font:800 1.6rem var(--font-display);margin:0;text-wrap:balance}
+.dialog h3{font:800 1.02rem var(--font-display);margin:0 0 6px}
+.dialog p{margin:0}
+.dialog .muted{color:var(--ink-soft);font-size:.95rem}
+.example{background-color:#fff;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:18px 18px;border-radius:14px;border:2px solid var(--grid);padding:10px 14px;font:700 1.3rem var(--font-body);font-variant-numeric:tabular-nums;display:flex;flex-direction:column;gap:2px}
+.example .ex-res{color:var(--palm)}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{background:#efe6cf;border-radius:99px;padding:3px 12px;font-weight:700;font-size:.92rem}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{background:#fff;border:2px solid #d9cba8;color:var(--ink);border-radius:12px;padding:7px 12px;font:700 .95rem var(--font-body);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sand);border-color:var(--ink)}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:2px solid #e7dcc2;border-radius:14px;padding:10px 14px;cursor:pointer;font:700 1rem var(--font-body);color:var(--ink);width:100%;text-align:left}
+.toggle .sw{width:46px;height:26px;border-radius:99px;background:#c9d3d6;position:relative;flex:none;transition:background .2s}
+.toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle[aria-pressed="true"] .sw{background:var(--palm)}
+.toggle[aria-pressed="true"] .sw::after{transform:translateX(20px)}
+.danger{background:none;border:2px solid var(--coral);color:#a8382d;border-radius:12px;padding:8px 14px;font:700 .95rem var(--font-body);cursor:pointer}
+.danger.armed{background:var(--coral);color:#fff}
+.dialog .btn.ghost{color:var(--ink);border-color:#d9cba8}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--sand);color:var(--ink);border-radius:14px;padding:10px 16px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:min(92vw,460px);text-align:center}
+body.playing .tools [data-act="settings"],body.playing .tools .coins,body.playing .tools .helpbtn{display:none}
+@media (max-width:560px){
+  body.playing .top{display:none}
+  .app{gap:12px;padding-block:8px 20px}
+  .playbar{gap:6px 10px}
+  .playbar .btn.ghost{padding:6px 10px;font-size:.9rem}
+  .pb-title b{font-size:1.15rem}
+  .dots span{width:11px;height:11px}
+  .play-grid{gap:10px}
+  .sheet{min-height:0;padding:12px 12px 16px;gap:10px;border-radius:18px}
+  .instr{font-size:1rem}
+  .calc{font-size:clamp(1.35rem,6.2vw,2rem)}
+  .side{gap:10px}
+  .bubble svg{width:42px;height:42px}
+  .say{font-size:.95rem;padding:8px 12px;min-height:0}
+  .keypad{gap:8px}
+  .key{min-height:50px;font-size:1.5rem}
+  .judge .btn{min-height:60px}
+  .explain{font-size:.95rem;padding:10px 12px}
+}
+/* Spielerprofile & Lehrerbereich */
+.who{max-width:720px;margin:0 auto;width:100%;background:var(--paper);color:var(--ink);border-radius:26px;padding:24px clamp(16px,4vw,32px);display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 0 rgba(0,0,0,.22)}
+.who h2{font:800 clamp(1.6rem,5vw,2.2rem) var(--font-display);margin:0;text-align:center;text-wrap:balance}
+.who > p{margin:0;text-align:center}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.pcard{background:#fff;border:3px solid #efe6cf;border-radius:18px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:var(--ink);font:inherit;min-width:0}
+.pcard:hover{border-color:var(--shallow)}
+.pcard b{font:800 1.05rem var(--font-display);max-width:100%;overflow-wrap:anywhere;text-align:center}
+.pcard small{color:var(--ink-soft);font-size:.85rem}
+.pcard.new{border-style:dashed}
+.pcard .plus{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font:800 2.2rem var(--font-display);background:#efe6cf;color:var(--wood)}
+.avatar{width:64px;height:64px;display:block;flex:none}
+.avatar.sm{width:40px;height:40px}
+.pchip{padding:3px 14px 3px 3px;max-width:13em}
+.pchip .avatar{width:30px;height:30px}
+.pchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-screen="who"] .tools .coins{display:none}
+.npform{display:flex;flex-direction:column;gap:8px;width:100%;max-width:480px;margin:0 auto}
+.fl{font:800 .95rem var(--font-display)}
+.tin{font:700 1.15rem var(--font-body);padding:10px 12px;border:2px solid #d9cba8;border-radius:12px;background:#fff;color:var(--ink);width:100%;min-width:0}
+.tin:focus{outline:3px solid var(--gold);outline-offset:1px}
+.avgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media (max-width:440px){.avgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.avpick{background:none;border:3px solid transparent;border-radius:50%;padding:2px;cursor:pointer;min-width:0}
+.avpick .avatar{width:100%;height:auto;aspect-ratio:1;max-width:100%}
+.avpick[aria-checked="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--gold)}
+.ferr{color:#a8382d;font-weight:700;margin:0}
+.pinrow{display:flex;gap:10px;flex-wrap:wrap}
+.pinrow .tin{flex:1 1 110px;width:auto;letter-spacing:.25em}
+.warn{background:#fff0c4;border-radius:12px;padding:8px 12px;font-weight:700}
+.hint{background:#e3f1f4;border-radius:12px;padding:8px 12px;font-size:.95rem}
+.sec{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:2px solid #efe6cf}
+.dialog .sec h3{margin:0}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.plist li{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #efe6cf;border-radius:12px;padding:6px 8px;flex-wrap:wrap}
+.pn{display:flex;flex-direction:column;flex:1 1 140px;min-width:0}
+.pn b{overflow-wrap:anywhere}
+.pn small{color:var(--ink-soft)}
+.pact{display:flex;gap:6px}
+.mini-btn{background:#fff;border:2px solid #d9cba8;border-radius:10px;padding:5px 10px;font:700 .85rem var(--font-body);color:var(--ink);cursor:pointer}
+.mini-btn.danger2{border-color:var(--coral);color:#a8382d}
+.mini-btn.armed{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn.small{padding:10px 16px;font-size:1rem}
+.btn.fertig{width:100%;margin-bottom:10px;background:var(--palm);color:#fff;box-shadow:0 5px 0 #1d6a3a;font-size:1.05rem}
+.btn.fertig:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+@media (max-width:560px){.btn.fertig{padding:11px 14px;margin-bottom:8px}}
+/* Hilfe, Tour, Entwicklerhinweis */
+.helpbtn{width:40px;height:40px;border-radius:50%;border:0;background:var(--gold);color:var(--ink);font:800 1.35rem var(--font-display);box-shadow:0 3px 0 var(--gold-deep);cursor:pointer;flex:none;display:grid;place-items:center;padding:0}
+.helpbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gold-deep)}
+.dhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.credit{margin:6px auto 0;max-width:62ch;text-align:center;font-size:.92rem;line-height:1.5;color:var(--foam-dim)}
+.credit b{color:var(--foam)}
+.dialog .credit,.who .credit{color:var(--ink-soft)}
+.dialog .credit b,.who .credit b{color:var(--ink)}
+.hmenu{display:flex;flex-direction:column;gap:10px}
+.hm{text-align:left}
+.btn.alt{background:#fff;color:var(--ink);border:2px solid #d9cba8;box-shadow:0 4px 0 #d9cba8}
+.btn.alt:active{box-shadow:0 1px 0 #d9cba8}
+.sb{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 14px;margin:0;background:#fff;border:2px solid #efe6cf;border-radius:14px;padding:12px 14px}
+.sb dt{font:800 .95rem var(--font-display);color:var(--wood)}
+.sb dd{margin:0;line-height:1.45}
+@media (max-width:440px){.sb{grid-template-columns:minmax(0,1fr)}.sb dd{margin-bottom:4px}}
+.sbnav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sbdots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.sbdots button{width:14px;height:14px;border-radius:50%;border:2px solid var(--wood);background:#fff;padding:0;cursor:pointer}
+.sbdots button.sel{background:var(--wood)}
+.sball{display:flex;flex-direction:column;gap:10px}
+.sbc{background:#fff;border:2px solid #efe6cf;border-radius:14px;padding:10px 14px}
+.sbc h3{margin:0 0 4px}
+.sbc p{margin:0 0 4px;line-height:1.45}
+.tour-block{position:fixed;inset:0;z-index:1000;background:rgba(4,20,28,.62)}
+.tour-hl{z-index:1001!important;box-shadow:0 0 0 4px var(--gold)!important;border-radius:14px}
+.windbar.tour-hl{background:var(--abyss);padding:6px 10px}
+.sec.tour-hl,[data-tour="t-kidswind"].tour-hl,[data-tour="t-reset"].tour-hl{background:var(--paper);padding:8px 10px}
+.tour-tip{position:fixed;z-index:2000;background:var(--ink);color:var(--foam);border-radius:16px;padding:14px 16px;max-width:380px;width:calc(100vw - 24px);box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.tour-tip .ts{color:var(--gold);font-size:.85rem;font-weight:700}
+.tour-tip b{display:block;font:800 1.15rem var(--font-display);margin:2px 0 4px}
+.tour-tip p{margin:0 0 10px;line-height:1.4}
+.tour-tip .tb{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.tour-tip .tb button{border:0;border-radius:10px;padding:8px 14px;font:700 .95rem var(--font-body);cursor:pointer}
+.tour-tip .tb .nx{background:var(--gold);color:var(--ink)}
+.tour-tip .tb .bk{background:#2c5566;color:var(--foam)}
+.tour-tip .tb .en{background:none;color:var(--foam-dim);margin-right:auto}
+/* Runden */
+.roundbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.rb-chip{background:var(--gold);color:var(--ink);font:800 .95rem var(--font-display);border-radius:99px;padding:3px 12px}
+.rb-txt{color:var(--foam-dim);font-size:.95rem}
+.roundbar:has(.rb-done){background:var(--palm);border-radius:18px;padding:12px 16px;justify-content:space-between}
+.rb-done{display:flex;flex-direction:column;min-width:0;flex:1 1 260px}
+.rb-done b{font:800 1.2rem var(--font-display);color:#fff}
+.rb-done span{color:#e8f7ec}
+.roundbar.tour-hl{background:var(--abyss);padding:6px 10px}
+.credit .mail{white-space:nowrap;user-select:all}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="coin" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#ffc63f" stroke="#c98a06" stroke-width="2.5"/><circle cx="16" cy="16" r="9" fill="none" stroke="#c98a06" stroke-width="2"/><path d="M13 12h6M16 12v9" stroke="#c98a06" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></symbol>
+    <symbol id="parrot" viewBox="0 0 60 60"><path d="M22 54 Q24 44 26 40" stroke="#2f9a57" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M30 56 Q30 46 30 42" stroke="#3bb3c3" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="29" cy="34" rx="13" ry="15" fill="#e8584a"/><path d="M18 30 Q14 44 28 48 Q22 40 24 30Z" fill="#2f9a57"/><circle cx="32" cy="17" r="11" fill="#e8584a"/><circle cx="35" cy="15" r="4.4" fill="#fff"/><circle cx="36" cy="15" r="2.2" fill="#16323f"/><path d="M41 16 Q50 18 44 27 Q42 22 38 22Z" fill="#ffc63f"/><path d="M26 8 Q28 2 33 6" stroke="#ffc63f" stroke-width="3" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="ship" viewBox="0 0 80 72"><path d="M40 6 V46" stroke="#5b3a20" stroke-width="3"/><path d="M40 6 L52 10 L40 14Z" fill="#ffc63f"/><path d="M43 14 Q66 28 43 44Z" fill="#fffaf0"/><path d="M37 16 Q18 30 37 44Z" fill="#f1e6cc"/><circle cx="51" cy="29" r="4.5" fill="#ffc63f"/><path d="M6 46 H74 L64 62 H16Z" fill="#8a5a33"/><path d="M10 50 H70" stroke="#5b3a20" stroke-width="2"/><circle cx="26" cy="55" r="2.2" fill="#ffc63f"/><circle cx="40" cy="55" r="2.2" fill="#ffc63f"/><circle cx="54" cy="55" r="2.2" fill="#ffc63f"/><path d="M2 66 Q12 60 22 66 T42 66 T62 66 T80 66" stroke="#eaf8f7" stroke-width="3" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="av-parrot" viewBox="0 0 48 48"><use href="#parrot" width="60" height="60" transform="translate(5 4) scale(.66)"/></symbol>
+    <symbol id="av-ship" viewBox="0 0 48 48"><use href="#ship" width="80" height="72" transform="translate(6 8) scale(.45)"/></symbol>
+    <symbol id="av-octo" viewBox="0 0 48 48"><path d="M12 27a12 12 0 0 1 24 0v3H12z" fill="#e8584a"/><path d="M14 30q-2 7-6 9M19 30q0 8-3 10M24 30v11M29 30q0 8 3 10M34 30q2 7 6 9" stroke="#e8584a" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="19" cy="23" r="3.2" fill="#fff"/><circle cx="29" cy="23" r="3.2" fill="#fff"/><circle cx="19.6" cy="23.6" r="1.6" fill="#16323f"/><circle cx="29.6" cy="23.6" r="1.6" fill="#16323f"/></symbol>
+    <symbol id="av-fish" viewBox="0 0 48 48"><path d="M7 24Q19 10 33 24Q19 38 7 24Z" fill="#ffc63f"/><path d="M32 24L42 15V33Z" fill="#ffc63f"/><path d="M22 16q4 8 0 16" stroke="#c98a06" stroke-width="2" fill="none"/><circle cx="15" cy="22" r="2.4" fill="#16323f"/></symbol>
+    <symbol id="av-crab" viewBox="0 0 48 48"><path d="M13 30l-5 5M15 33l-3 6M35 30l5 5M33 33l3 6" stroke="#c43d30" stroke-width="3" stroke-linecap="round"/><path d="M16 22l-5-7M32 22l5-7" stroke="#c43d30" stroke-width="3" stroke-linecap="round"/><circle cx="10" cy="14" r="5" fill="#e8584a"/><circle cx="38" cy="14" r="5" fill="#e8584a"/><ellipse cx="24" cy="28" rx="13" ry="9" fill="#e8584a"/><path d="M20 20v-5M28 20v-5" stroke="#c43d30" stroke-width="2.5"/><circle cx="20" cy="14" r="2.6" fill="#fff"/><circle cx="28" cy="14" r="2.6" fill="#fff"/><circle cx="20" cy="14" r="1.3" fill="#16323f"/><circle cx="28" cy="14" r="1.3" fill="#16323f"/></symbol>
+    <symbol id="av-turtle" viewBox="0 0 48 48"><ellipse cx="13" cy="34" rx="4" ry="3" fill="#6fc283"/><ellipse cx="31" cy="34" rx="4" ry="3" fill="#6fc283"/><circle cx="39" cy="24" r="5" fill="#6fc283"/><circle cx="41" cy="23" r="1.2" fill="#16323f"/><path d="M8 30a14 12 0 0 1 28 0Z" fill="#2f9a57"/><path d="M15 30l3-8h8l3 8M18 22l-2-5M26 22l2-5" stroke="#1d6a3a" stroke-width="2" fill="none"/></symbol>
+    <symbol id="av-whale" viewBox="0 0 48 48"><path d="M6 27Q7 15 24 16Q36 17 38 24L45 18L43 31Q37 38 22 38Q7 38 6 27Z" fill="#16708a"/><path d="M10 31Q22 36 36 30" stroke="#eaf8f7" stroke-width="2" fill="none"/><circle cx="15" cy="24" r="2" fill="#fff"/><path d="M20 13q0-5-4-7M20 13q0-5 4-7" stroke="#16708a" stroke-width="2.5" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="av-anchor" viewBox="0 0 48 48"><circle cx="24" cy="10" r="3.5" fill="none" stroke="#16323f" stroke-width="3.5"/><path d="M24 14v25M16 19h16M10 28q2 12 14 12q12 0 14-12" stroke="#16323f" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M7 30l3-4 4 3M41 30l-3-4-4 3" stroke="#16323f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="av-star" viewBox="0 0 48 48"><path d="M24 6L29 19H43L32 28L36 42L24 33L12 42L16 28L5 19H19Z" fill="#ff8a65" stroke="#e8584a" stroke-width="2" stroke-linejoin="round"/><circle cx="24" cy="22" r="1.6" fill="#fff"/><circle cx="20" cy="27" r="1.3" fill="#fff"/><circle cx="28" cy="27" r="1.3" fill="#fff"/></symbol>
+    <symbol id="av-shell" viewBox="0 0 48 48"><path d="M24 40L7 22Q24 2 41 22Z" fill="#fff2c9"/><path d="M24 40L13 15M24 40L19 10M24 40V9M24 40L29 10M24 40L35 15" stroke="#e0b96a" stroke-width="2"/><path d="M19 40h10" stroke="#e0b96a" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="av-compass" viewBox="0 0 48 48"><circle cx="24" cy="24" r="15" fill="#fffaf0" stroke="#16323f" stroke-width="3"/><path d="M24 11l4 13h-8z" fill="#e8584a"/><path d="M24 37l-4-13h8z" fill="#8a989f"/><circle cx="24" cy="24" r="2" fill="#16323f"/></symbol>
+    <symbol id="av-chest" viewBox="0 0 48 48"><path d="M9 22q0-10 15-10t15 10z" fill="#a46b3c"/><rect x="9" y="22" width="30" height="16" rx="2" fill="#8a5a33"/><path d="M9 22h30" stroke="#ffc63f" stroke-width="3"/><rect x="21" y="20" width="6" height="8" rx="1.5" fill="#ffc63f"/><circle cx="16" cy="14" r="1.6" fill="#ffc63f"/><circle cx="32" cy="15" r="1.4" fill="#ffc63f"/></symbol>
+    <symbol id="glass" viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 6 10 6 10 12M17 3c0 6-10 6-10 12M7 15v6M17 15v6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 80 72" aria-hidden="true"><use href="#ship"/></svg><h1>Die <span>Rechen</span>piraten</h1></div>
+    <div class="tools">
+      <button class="iconbtn pchip" data-act="switch" id="btn-player" data-tour="player" hidden></button>
+      <span class="coins" title="Goldtaler in der Schatztruhe" data-tour="coins"><svg aria-hidden="true"><use href="#coin"/></svg><span id="coins">0</span></span>
+      <button class="helpbtn" data-act="help" data-tour="help" aria-label="Hilfe und Info" title="Hilfe und Info">?</button>
+    </div>
+  </header>
+
+  <!-- WER SPIELT -->
+  <section id="scr-who" class="screen" hidden><div class="who" id="who"></div></section>
+
+  <!-- KARTE -->
+  <section id="scr-map" class="screen" style="display:flex;flex-direction:column;gap:16px">
+    <p class="intro">Segle von Insel zu Insel und sammle Goldtaler. Auf jeder Insel wartet eine Ladung Rechenaufgaben. Auf den Bonus-Felsen prüfst du das Logbuch von Smutje Fritz.</p>
+    <div class="roundbar" id="roundbar" data-tour="round"></div>
+    <div class="windbar" role="group" aria-label="Zeitvorgabe" data-tour="wind">
+      <span class="lbl">Wind:</span>
+      <button class="wind" data-wind="flaute"><b>Flaute</b><small>ohne Zeit</small></button>
+      <button class="wind" data-wind="brise"><b>Brise</b><small>viel Zeit</small></button>
+      <button class="wind" data-wind="wind"><b>Frischer Wind</b><small>mittel</small></button>
+      <button class="wind" data-wind="sturm"><b>Sturm</b><small>wenig Zeit</small></button>
+    </div>
+    <div class="map" id="map" data-tour="map">
+      <svg class="route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <g class="wide">
+          <polyline points="9,76 27,50 43,75 59,47 75,73 89,34"/>
+          <polyline class="bonus" points="27,50 19,17"/><polyline class="bonus" points="59,47 47,16"/><polyline class="bonus" points="89,34 71,13"/>
+        </g>
+        <g class="tall">
+          <polyline points="24,92 72,81 24,69 66,54 25,44 48,24"/>
+          <polyline class="bonus" points="72,81 80,68"/><polyline class="bonus" points="66,54 84,40"/><polyline class="bonus" points="48,24 83,9"/>
+        </g>
+      </svg>
+      <svg class="compass" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="none" stroke="#eaf8f7" stroke-width="2"/><path d="M50 8 L58 50 L50 92 L42 50Z" fill="#f5dca3"/><path d="M8 50 L50 42 L92 50 L50 58Z" fill="#eaf8f7" opacity=".7"/><path d="M50 8 L58 50 L42 50Z" fill="#e8584a"/><text x="50" y="6" text-anchor="middle" font-size="12" font-weight="800" fill="#f5dca3" font-family="Andika, sans-serif" dy="-1">N</text></svg>
+      <div id="islands"></div>
+      <svg class="ship" id="mapship" viewBox="0 0 80 72" aria-hidden="true"><use href="#ship"/></svg>
+    </div>
+    <div class="below">
+      <div class="panel" data-tour="rule">
+        <h2>Die Piratenregel: Punkt vor Strich</h2>
+        <p>Mal (·) und Geteilt (:) rechnest du zuerst. Danach kommen Plus und Minus, immer von links nach rechts.</p>
+        <div class="mini" id="mini"></div>
+      </div>
+      <div class="panel">
+        <h2>So segelst du</h2>
+        <p>Tippe zuerst das Rechenzeichen an, das du zuerst rechnest. Dann trägst du das Ergebnis unter dem Bogen ein.</p>
+        <p>Für jede Aufgabe gibt es bis zu 3 Goldtaler.</p>
+      </div>
+    </div>
+    <p class="credit" data-credit></p>
+  </section>
+
+  <!-- SPIEL -->
+  <section id="scr-play" class="screen" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="playbar">
+        <button class="btn ghost" data-act="quit" id="btn-quit">Zur Karte</button>
+        <div class="pb-title"><b id="pb-isl"></b><span id="pb-count"></span></div>
+        <div class="dots" id="pb-dots" aria-hidden="true"></div>
+        <span class="coins"><svg aria-hidden="true"><use href="#coin"/></svg><span id="pb-taler">0</span></span>
+      </div>
+      <div class="play-grid">
+        <div class="sheet" id="sheet">
+          <div class="timer" id="timer" hidden><svg aria-hidden="true"><use href="#glass"/></svg><span>Sanduhr</span><div class="tbar"><i id="tfill"></i></div><span id="ttxt">0 s</span></div>
+          <div id="sheet-body" style="display:flex;flex-direction:column;gap:16px;flex:1"></div>
+        </div>
+        <div class="side">
+          <div class="bubble" id="bubble"><svg aria-hidden="true"><use href="#parrot"/></svg><div class="say" aria-live="polite"><small>Papagei Paula</small><span id="say"></span></div></div>
+          <div id="controls"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ERGEBNIS -->
+  <section id="scr-result" class="screen" hidden><div class="result" id="result"></div></section>
+</div>
+
+<div class="overlay" id="ov" hidden><div class="dialog" role="dialog" aria-modal="true" id="ov-card"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const isOp = x => typeof x === 'string';
+const isP = x => x === '·' || x === ':';
+const ap = (a, o, b) => o === '+' ? a + b : o === '−' ? a - b : o === '·' ? a * b : a / b;
+const hasP = t => t.some(isP);
+const fmt = t => t.join(' ');
+const reduceAt = (t, i) => [...t.slice(0, i - 1), ap(t[i - 1], t[i], t[i + 1]), ...t.slice(i + 2)];
+const ltrEval = t => { let v = t[0]; for (let i = 1; i < t.length; i += 2) v = ap(v, t[i], t[i + 1]); return v; };
+
+function solve(t) {
+  const lines = [t], steps = []; let c = t;
+  while (hasP(c)) { const i = c.findIndex(isP); steps.push(`${c[i-1]} ${c[i]} ${c[i+1]} = ${ap(c[i-1], c[i], c[i+1])}`); c = reduceAt(c, i); lines.push(c); }
+  let v = c[0];
+  for (let i = 1; i < c.length; i += 2) { const n = ap(v, c[i], c[i+1]); steps.push(`${v} ${c[i]} ${c[i+1]} = ${n}`); v = n; }
+  if (c.length > 1) lines.push([v]);
+  return { lines, steps, value: v };
+}
+function ltrPath(t) {
+  const steps = []; let v = t[0];
+  for (let i = 1; i < t.length; i += 2) { const n = ap(v, t[i], t[i+1]); if (!Number.isInteger(n) || n < 0) return null; steps.push(`${v} ${t[i]} ${t[i+1]} = ${n}`); v = n; }
+  return { steps, value: v };
+}
+
+/* ---------- Inseln ---------- */
+const BOTH = ['·', ':'];
+const ISL = [
+  { id:'m1', kind:'main', no:1, name:'Möweninsel', art:'gull', short:'Plus und Minus mit Mal', desc:'In jeder Aufgabe steckt eine Malaufgabe zwischen Plus und Minus.', v:[{g:2,p:1,po:['·']}], w:[9,76], t:[24,92] },
+  { id:'m2', kind:'main', no:2, name:'Haifischbucht', art:'shark', short:'Plus und Minus mit Geteilt', desc:'Jetzt versteckt sich eine Geteiltaufgabe in der Rechnung.', v:[{g:2,p:1,po:[':']}], w:[27,50], t:[72,81] },
+  { id:'b1', kind:'bonus', parent:'m2', name:'Kniffelklippe', art:'rock', short:'Fehlerdetektiv', v:[{g:2,p:1,po:BOTH}], w:[19,17], t:[80,68] },
+  { id:'m3', kind:'main', no:3, name:'Kokosinsel', art:'coco', short:'Alle vier Rechenarten', desc:'Plus, Minus, Mal und Geteilt kommen bunt gemischt vor.', v:[{g:2,p:1,po:BOTH}], w:[43,75], t:[24,69] },
+  { id:'m4', kind:'main', no:4, name:'Nebelriff', art:'fog', short:'Drei Zahlen, eine Punktrechnung', desc:'Die Rechnungen werden länger: drei Teile, aber nur eine Punktrechnung.', v:[{g:3,p:1,po:BOTH}], w:[59,47], t:[66,54] },
+  { id:'b2', kind:'bonus', parent:'m4', name:'Lupenfelsen', art:'rock', short:'Fehlerdetektiv', v:[{g:3,p:1,po:BOTH}], w:[47,16], t:[84,40] },
+  { id:'m5', kind:'main', no:5, name:'Vulkaninsel', art:'volcano', short:'Zwei Punktrechnungen', desc:'Zwei Punktrechnungen in einer Aufgabe. Welche du zuerst rechnest, darfst du dir aussuchen.', v:[{g:2,p:2,po:BOTH}], w:[75,73], t:[25,44] },
+  { id:'m6', kind:'main', no:6, name:'Schatzinsel', art:'treasure', big:true, short:'Alles gemischt', desc:'Die Meisterprüfung: alle Aufgabenarten durcheinander. Hier liegt der Schatz!', v:[{g:3,p:1,po:BOTH},{g:2,p:2,po:BOTH},{g:3,p:2,po:BOTH}], w:[89,34], t:[48,24] },
+  { id:'b3', kind:'bonus', parent:'m6', name:'Spürnasenriff', art:'rock', short:'Fehlerdetektiv', v:[{g:2,p:2,po:BOTH},{g:3,p:1,po:BOTH},{g:3,p:2,po:BOTH}], w:[71,13], t:[83,9] },
+];
+const byId = id => ISL.find(i => i.id === id);
+const MAINS = ISL.filter(i => i.kind === 'main');
+const WIND = { flaute:{name:'Flaute',sec:0}, brise:{name:'Brise',sec:40}, wind:{name:'Frischer Wind',sec:25}, sturm:{name:'Sturm',sec:10} };
+
+/* ---------- Speicher ---------- */
+const KEY = 'rechenpiraten-kinder-v1';
+const DEF_SET = { wind:'flaute', count:8, unlockAll:false, sound:false, profiles:true, kidsCreate:true, kidsWind:true };
+const AV = [
+  { id:'parrot', name:'Papagei', bg:'#f5dca3' }, { id:'ship', name:'Schiff', bg:'#3bb3c3' }, { id:'octo', name:'Krake', bg:'#b9e4e8' },
+  { id:'fish', name:'Fisch', bg:'#16708a' }, { id:'crab', name:'Krebs', bg:'#f5dca3' }, { id:'turtle', name:'Schildkröte', bg:'#b9e4e8' },
+  { id:'whale', name:'Wal', bg:'#f5dca3' }, { id:'anchor', name:'Anker', bg:'#ffc63f' }, { id:'star', name:'Seestern', bg:'#16708a' },
+  { id:'shell', name:'Muschel', bg:'#e8584a' }, { id:'compass', name:'Kompass', bg:'#2f9a57' }, { id:'chest', name:'Schatzkiste', bg:'#3bb3c3' },
+];
+let store;
+try { store = JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { store = null; }
+if (!store || typeof store !== 'object') store = {};
+store.settings = Object.assign({}, DEF_SET);
+if (typeof store.pin !== 'string' || !/^\d{4,6}$/.test(store.pin)) store.pin = '1234';
+store.players = store.players || {};
+if (store.prog || store.coins) { store.players._ = { id:'_', name:'', av:'parrot', prog:store.prog || {}, coins:store.coins || 0 }; delete store.prog; delete store.coins; }
+store.order = (store.order || []).filter(id => store.players[id] && id !== '_');
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+function me() {
+  if (!store.settings.profiles) { if (!store.players._) store.players._ = { id:'_', name:'', av:'parrot', prog:{}, coins:0 }; return store.players._; }
+  return store.players[store.active] || null;
+}
+const prog = () => (me() || { prog:{} }).prog;
+const windNow = () => { const p = me(); return store.settings.kidsWind && p && WIND[p.wind] ? p.wind : store.settings.wind; };
+const starSum = p => Object.values(p.prog).reduce((a, x) => a + (x.stars || 0), 0);
+const doneCount = p => Object.values(p.prog).filter(x => x.done).length;
+function avSVG(id, cls = '') { const a = AV.find(x => x.id === id) || AV[0]; return `<svg class="avatar ${cls}" viewBox="0 0 48 48" role="img" aria-label="${a.name}"><circle cx="24" cy="24" r="24" fill="${a.bg}"/><use href="#av-${a.id}"/></svg>`; }
+
+const isDone = id => !!(prog()[id] && prog()[id].done);
+function unlocked(isl) {
+  if (store.settings.unlockAll) return true;
+  if (isl.kind === 'bonus') return isDone(isl.parent);
+  const k = MAINS.indexOf(isl);
+  return k === 0 || isDone(MAINS[k-1].id);
+}
+function blocker(isl) { return isl.kind === 'bonus' ? byId(isl.parent) : MAINS[MAINS.indexOf(isl) - 1]; }
+
+/* ---------- Aufgaben erzeugen ---------- */
+function genOne(v) {
+  const pos = shuffle([...Array(v.g).keys()]).slice(0, v.p);
+  const gs = [];
+  for (let i = 0; i < v.g; i++) {
+    if (pos.includes(i)) {
+      const op = pick(v.po);
+      if (op === '·') { const a = rnd(2,10), b = rnd(2,10); gs.push({ t:[a,'·',b], v:a*b }); }
+      else { const d = rnd(2,10), q = rnd(2,10); gs.push({ t:[q*d,':',d], v:q }); }
+    } else { const n = rnd(3, v.g === 3 ? 60 : 90); gs.push({ t:[n], v:n }); }
+  }
+  const so = []; for (let i = 0; i < v.g - 1; i++) so.push(pick(['+','−']));
+  let run = gs[0].v;
+  for (let i = 0; i < so.length; i++) { run = so[i] === '+' ? run + gs[i+1].v : run - gs[i+1].v; if (run < 0 || run > 100) return null; }
+  if (run < 1) return null;
+  const tokens = [...gs[0].t];
+  for (let i = 0; i < so.length; i++) tokens.push(so[i], ...gs[i+1].t);
+  return { tokens, value: run };
+}
+function genMain(isl, n) {
+  const out = [], seen = new Set(); let guard = 0;
+  while (out.length < n && guard++ < 20000) {
+    const t = genOne(pick(isl.v)); if (!t) continue;
+    const k = fmt(t.tokens); if (seen.has(k)) continue; seen.add(k);
+    out.push({ kind:'main', ...t });
+  }
+  return out;
+}
+function genDet(isl, n) {
+  const pattern = ['ltr','right','slip','ltr','right','slip','ltr','right','ltr','slip'];
+  const types = shuffle(Array.from({ length:n }, (_, i) => pattern[i % pattern.length]));
+  const out = [], seen = new Set();
+  for (const type of types) {
+    for (let guard = 0; guard < 20000; guard++) {
+      const b = genOne(pick(isl.v)); if (!b) continue;
+      const k = fmt(b.tokens); if (seen.has(k)) continue;
+      const task = { kind:'det', type, tokens:b.tokens, value:b.value };
+      const inRange = steps => steps.every(x => (x.match(/\d+/g) || []).every(n => +n <= 100));
+      if (type === 'right') task.claim = b.value;
+      else if (type === 'ltr') {
+        const l = ltrPath(b.tokens); if (!l || l.value === b.value || !inRange(l.steps)) continue;
+        task.claim = l.value; task.ltr = l;
+      } else {
+        const t = b.tokens, idx = t.map((x, i) => isP(x) ? i : -1).filter(i => i >= 0);
+        const i = pick(idx), a = t[i-1], op = t[i], c = t[i+1], right = ap(a, op, c);
+        const wrong = op === '·' ? right + pick([-1,1]) * pick([a, c]) : right + pick([-1,1]);
+        if (wrong < 1 || wrong > 100 || wrong === right) continue;
+        const t2 = [...t.slice(0, i-1), wrong, ...t.slice(i+2)];
+        const cv = solve(t2).value;
+        if (!Number.isInteger(cv) || cv < 0 || cv === b.value) continue;
+        const sSteps = [`${a} ${op} ${c} = ${wrong}`, ...solve(t2).steps];
+        if (!inRange(sSteps)) continue;
+        task.claim = cv; task.slip = { label:`${a} ${op} ${c}`, right, wrong, steps:sSteps };
+      }
+      seen.add(k); out.push(task); break;
+    }
+  }
+  return out;
+}
+
+/* ---------- Ton ---------- */
+let ac = null;
+function sfx(kind) {
+  if (!store.settings.sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    const seq = { good:[[660,.09],[880,.16]], bad:[[196,.2]], tap:[[520,.05]], win:[[523,.1],[659,.1],[784,.1],[1047,.3]] }[kind];
+    let t = ac.currentTime;
+    seq.forEach(([f, d]) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = kind === 'bad' ? 'square' : 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(kind === 'bad' ? 0.05 : 0.14, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + d + 0.03); t += d * 0.9;
+    });
+  } catch (e) {}
+}
+
+/* ---------- Bildschirme ---------- */
+let screen = 'map';
+function show(name) {
+  screen = name;
+  document.body.classList.toggle('playing', name === 'play');
+  document.body.dataset.screen = name;
+  updateHeader();
+  ['who','map','play','result'].forEach(n => { $('#scr-' + n).hidden = n !== name; });
+  window.scrollTo(0, 0);
+}
+let toastT = 0;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200); }
+
+function updateHeader() {
+  const p = me(), chip = $('#btn-player');
+  $('#coins').textContent = p ? p.coins : 0;
+  const showChip = store.settings.profiles && p && screen !== 'who';
+  chip.hidden = !showChip;
+  if (showChip) { chip.innerHTML = `${avSVG(p.av)}<span>${esc(p.name)}</span>`; chip.setAttribute('aria-label', `Spieler wechseln, jetzt spielt ${p.name}`); }
+}
+function goMap() {
+  if (store.settings.profiles && !me()) { renderWho(); show('who'); }
+  else { renderMap(); show('map'); maybeKidsTour(); }
+}
+function refreshScreen() { if (screen !== 'play') goMap(); }
+
+/* ---------- Entwicklerhinweis ---------- */
+const CREDIT = 'Die Rechenpiraten wurden entwickelt von <b>Mathias Georgi</b> (MPS St. Blasius Dornburg).<br>Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: <b class="mail">mathias.georgi@mps-stblasius.de</b>';
+const VERSION = 'Kinderversion 1.0 · November 2026';
+function fillCredits() { document.querySelectorAll('[data-credit]').forEach(e => { e.innerHTML = CREDIT; }); }
+
+/* ---------- Hilfe: Kurzanleitung (Tour) ---------- */
+const TOUR_S = [
+  { sel:'[data-tour=help]', t:'Hilfe und Info', x:'Über das Fragezeichen findest du diese Kurzanleitung jederzeit wieder. Dazu gibt es Steckbriefe zu allen Inseln und Infos zum Spiel.' },
+  { sel:'[data-tour=player]', t:'Wer spielt?', x:'Hier siehst du, wer gerade spielt. Tippe darauf, wenn ein anderes Kind an die Reihe kommt. Jedes Kind hat seine eigenen Inseln, Sterne und Goldtaler.' },
+  { sel:'[data-tour=wind]', t:'Wind', x:'Der Wind bestimmt, wie viel Zeit du hast. Bei Flaute gibt es keine Zeitvorgabe. Mit Brise, frischem Wind und Sturm wird die Zeit immer knapper. Du kannst den Wind jederzeit selbst ändern.' },
+  { sel:'[data-tour=map]', t:'Die Seekarte', x:'Tippe auf eine Insel, um anzulegen. Wenn du eine Insel schaffst, wird die nächste frei. Auf den Bonus-Felsen prüfst du als Fehlerdetektiv die Rechnungen von Smutje Fritz.' },
+  { sel:'[data-tour=rule]', t:'So rechnest du', x:'1. Tippe alle Mal- und Geteiltzeichen an. 2. Tippe auf „Fertig“. 3. Rechne die Punktrechnungen und trag die Ergebnisse unter die Bögen ein. 4. Rechne die untere Zeile aus. Das Ergebnis kommt nach rechts.' },
+  { sel:'[data-tour=coins]', t:'Goldtaler', x:'Für jede Aufgabe gibt es bis zu 3 Goldtaler. Jeder Fehler kostet einen Taler. Knifflige Aufgaben kommen am Ende als Flaschenpost noch einmal.' },
+  { sel:'[data-tour=round]', t:'Neue Runde', x:'Wenn du alle Inseln geschafft hast, kannst du hier eine neue Runde starten. Deine Goldtaler behältst du.' },
+];
+const TOUR_T = [
+  { sel:'[data-tour=t-wind]', t:'Zeitvorgabe (Wind)', x:'Flaute: ohne Zeit. Brise 40 s, Frischer Wind 25 s, Sturm 10 s, jeweils pro Rechenschritt. Für den Einstieg Flaute oder Brise wählen. Sturm ist sehr knapp und eher etwas für schnelle Rechner.' },
+  { sel:'[data-tour=t-kidswind]', t:'Wind auf der Karte', x:'Ist der Schalter an, darf jedes Kind seinen Wind auf der Karte selbst wählen. Ist er aus, spielen alle mit dem Wind, den du hier einstellst.' },
+  { sel:'[data-tour=t-count]', t:'Aufgaben pro Insel', x:'5, 6, 8 oder 10 Aufgaben. Dazu kommen am Ende die Flaschenpost-Aufgaben, also die Aufgaben, die nicht gut geklappt haben.' },
+  { sel:'[data-tour=t-profiles]', t:'Spielerprofile', x:'Mit Profilen hat jedes Kind Name, Bild und eigenen Spielstand. Du legst fest, ob die Kinder selbst Profile anlegen dürfen. In der Liste siehst du den Fortschritt jedes Kindes und kannst einzelne Profile neu starten oder löschen.' },
+  { sel:'[data-tour=t-more]', t:'Weitere Einstellungen', x:'„Alle Inseln freischalten“ ist praktisch, wenn die Klasse gezielt eine bestimmte Insel üben soll. Die Töne lassen sich hier für alle ausschalten.' },
+  { sel:'[data-tour=t-pin]', t:'PIN ändern', x:'Die Start-PIN ist 1234. Bitte gleich eine eigene PIN mit 4 bis 6 Ziffern festlegen, damit die Kinder nicht hineinkommen.' },
+  { sel:'[data-tour=t-reset]', t:'Alle Spielstände löschen', x:'Setzt Inseln, Sterne und Goldtaler aller Kinder zurück, zum Beispiel für eine neue Klasse. Die Profile und Einstellungen bleiben erhalten.' },
+  { sel:'[data-tour=t-help]', t:'Hilfe', x:'Hier startest du diese Tour jederzeit neu und findest die Steckbriefe zu allen Inseln mit Lernziel, Beispielen und Tipps.' },
+];
+let tour = null;
+function clearTour() {
+  document.querySelectorAll('.tour-hl').forEach(e => { e.classList.remove('tour-hl'); if (e.dataset.tpos) { e.style.position = ''; delete e.dataset.tpos; } });
+  document.querySelectorAll('.tour-tip,.tour-block').forEach(e => e.remove());
+}
+function startTour(steps, onEnd) { if (tour) { const cb = tour.onEnd; tour = null; clearTour(); if (cb) cb(); } tour = { steps, i:0, onEnd }; tourStep(); }
+function endTour() { if (!tour) return; clearTour(); const cb = tour.onEnd; tour = null; if (cb) cb(); }
+function tourStep() {
+  clearTour(); if (!tour) return;
+  const steps = tour.steps.filter(st => { const el = document.querySelector(st.sel); return el && el.getClientRects().length; });
+  if (tour.i < 0) tour.i = 0;
+  if (tour.i >= steps.length) { endTour(); return; }
+  const st = steps[tour.i], el = document.querySelector(st.sel);
+  el.scrollIntoView({ block:'center', behavior:'instant' });
+  const host = el.closest('#ov') || document.body;
+  const blk = document.createElement('div'); blk.className = 'tour-block'; host.appendChild(blk);
+  if (getComputedStyle(el).position === 'static') { el.style.position = 'relative'; el.dataset.tpos = '1'; }
+  el.classList.add('tour-hl');
+  const last = tour.i === steps.length - 1;
+  const tip = document.createElement('div'); tip.className = 'tour-tip'; tip.setAttribute('role', 'dialog'); tip.setAttribute('aria-label', st.t);
+  tip.innerHTML = `<div class="ts">Schritt ${tour.i + 1} von ${steps.length}</div><b>${st.t}</b><p>${st.x}</p>
+    <div class="tb"><button class="en" data-act="tour-end">Tour beenden</button>${tour.i > 0 ? '<button class="bk" data-act="tour-back">Zurück</button>' : ''}<button class="nx" data-act="tour-next">${last ? 'Fertig' : 'Weiter'}</button></div>`;
+  document.body.appendChild(tip);
+  const r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight, vw = innerWidth, vh = innerHeight;
+  let top = r.bottom + 14; if (top + th > vh - 8) top = r.top - th - 14; if (top < 8) top = Math.max(8, vh - th - 8);
+  let left = r.left + r.width / 2 - tw / 2; left = Math.max(12, Math.min(left, vw - tw - 12));
+  tip.style.top = top + 'px'; tip.style.left = left + 'px';
+  tip.querySelector('.nx').focus({ preventScroll:true });
+}
+window.addEventListener('resize', () => { if (tour) tourStep(); });
+function kidsTourDone() { const pl = me(); if (pl) { pl.tour = true; save(); } }
+function maybeKidsTour() { const pl = me(); if (screen === 'map' && pl && !pl.tour && !tour && $('#ov').hidden) setTimeout(() => { if (screen === 'map' && !tour && $('#ov').hidden) startTour(TOUR_S, kidsTourDone); }, 450); }
+function openTeacher() {
+  $('#ov-card').innerHTML = settingsHTML(); ovMode = 'settings'; $('#ov').hidden = false; $('#ov').scrollTop = 0;
+  const h = $('#ov-card h2'); if (h) { h.tabIndex = -1; h.focus(); }
+  if (!store.tourT) setTimeout(() => startTour(TOUR_T, () => { store.tourT = true; save(); }), 400);
+}
+
+/* ---------- Hilfe: Steckbriefe und Info ---------- */
+const CARDS = [
+  { t:'Insel 1 · Möweninsel', rows:[
+    ['Lernziel', 'Eine Malaufgabe zwischen Plus und Minus erkennen und zuerst rechnen.'],
+    ['Aufgaben', '18 + 4 · 6 = 42 · 50 − 7 · 3 = 29'],
+    ['Tipp', 'Vorher an der Tafel fragen: „Was rechne ich zuerst?“ und die Malaufgabe mit einem Bogen markieren lassen.']] },
+  { t:'Insel 2 · Haifischbucht', rows:[
+    ['Lernziel', 'Dasselbe mit einer Geteiltaufgabe.'],
+    ['Aufgaben', '58 − 40 : 5 = 50 · 9 + 24 : 6 = 13'],
+    ['Tipp', 'Geteilt über die Umkehraufgabe lösen: 40 : 5 = 8, weil 8 · 5 = 40.']] },
+  { t:'Insel 3 · Kokosinsel', rows:[
+    ['Lernziel', 'Alle vier Rechenarten gemischt. Die Punktrechnung kann auch vorn stehen.'],
+    ['Aufgaben', '6 · 7 − 15 = 27 · 45 + 32 : 8 = 49'],
+    ['Tipp', 'Steht die Punktrechnung vorn, sieht die Aufgabe aus, als könne man einfach von links rechnen. Darauf gezielt hinweisen.']] },
+  { t:'Insel 4 · Nebelriff', rows:[
+    ['Lernziel', 'Drei Teile, eine Punktrechnung. Danach Plus und Minus von links nach rechts.'],
+    ['Aufgaben', '34 + 6 · 9 − 49 = 39 · 70 − 28 : 4 + 9 = 72'],
+    ['Tipp', 'Ein typischer Fehler ist, nach der Punktrechnung erst Plus und dann Minus zu rechnen. Das Spiel gibt dazu einen eigenen Hinweis.']] },
+  { t:'Insel 5 · Vulkaninsel', rows:[
+    ['Lernziel', 'Zwei Punktrechnungen finden. Das Kind entscheidet selbst, welche es zuerst rechnet.'],
+    ['Aufgaben', '3 · 4 + 20 : 5 = 16 · 54 : 6 − 2 · 3 = 3'],
+    ['Tipp', 'Erst wenn beide Zeichen angetippt sind, kommt man mit „Fertig“ weiter. So lernen die Kinder, die ganze Aufgabe abzusuchen.']] },
+  { t:'Insel 6 · Schatzinsel', rows:[
+    ['Lernziel', 'Alle Aufgabenarten gemischt, als Abschlussprüfung.'],
+    ['Aufgaben', '7 · 7 − 44 + 14 : 7 = 7 · 56 : 7 + 43 − 8 · 2 = 35'],
+    ['Tipp', 'Gut als Wiederholung vor einer Lernkontrolle.']] },
+  { t:'Fehlerdetektiv-Felsen', rows:[
+    ['Lernziel', 'Fremde Rechenwege prüfen und Fehler begründen.'],
+    ['Ablauf', 'Stimmt die Rechnung von Smutje Fritz? Wenn nicht: Was hat er falsch gemacht, von links nach rechts gerechnet oder sich verrechnet? Danach rechnet das Kind selbst richtig.'],
+    ['Freigabe', 'Kniffelklippe nach Insel 2, Lupenfelsen nach Insel 4, Spürnasenriff nach Insel 6.'],
+    ['Tipp', 'Gut für Partnerarbeit: Ein Kind entscheidet, das andere begründet laut.']] },
+  { t:'Goldtaler, Sterne und Flaschenpost', rows:[
+    ['Goldtaler', 'Bis zu 3 je Aufgabe. Jeder Fehler kostet einen Taler, auch ein zu früh getipptes „Fertig“.'],
+    ['Sterne', 'Ab 60 % der möglichen Taler 2 Sterne, ab 85 % 3 Sterne. Es zählt nur der erste Durchgang.'],
+    ['Flaschenpost', 'Aufgaben mit 0 oder 1 Taler kommen am Ende der Insel noch einmal. Dafür gibt es Extra-Taler.'],
+    ['Auswertung', 'Am Ende steht für jeden Bereich „sicher“, „fast sicher“ oder „noch üben“, dazu ein Tipp.']] },
+  { t:'Neue Runden', rows:[
+    ['Ablauf', 'Hat ein Kind alle neun Inseln geschafft, kann es auf der Seekarte eine neue Runde starten. Die Inseln werden wieder gesperrt und der Reihe nach freigespielt.'],
+    ['Was bleibt', 'Die Goldtaler bleiben erhalten. Die Zahl der Runden steht auf der Karte und bei „Wer spielt?“.'],
+    ['Aufgaben', 'Die Aufgaben werden jedes Mal neu erzeugt. Keine Runde gleicht der anderen.']] },
+  { t:'Zeitvorgabe (Wind)', rows:[
+    ['Stufen', 'Flaute ohne Zeit · Brise 40 s · Frischer Wind 25 s · Sturm 10 s, jeweils pro Rechenschritt.'],
+    ['Rechenschritte', 'Eine Punktrechnung: 3 Schritte. Zwei Punktrechnungen: 4 Schritte. Fehlerdetektiv: 2 Schritte mehr.'],
+    ['Auswahl', 'Jedes Kind wählt den Wind auf der Seekarte selbst. Zu Beginn ist Flaute eingestellt.'],
+    ['Empfehlung', 'Für den Einstieg Flaute oder Brise. Sturm ist für die 3. Klasse sehr knapp und eher als Herausforderung gedacht.']] },
+];
+let helpFrom = 'kids';
+function openHelp(from) {
+  if (tour) endTour();
+  helpFrom = from;
+  openOv(`<h2>Hilfe und Info</h2><div class="hmenu">
+    <button class="btn small hm" data-act="h-tour">${from === 'teacher' ? 'Kurzanleitung: Tour durch den Lehrerbereich' : 'Kurzanleitung: Tour durch die Seekarte'}</button>
+    <button class="btn small hm alt" data-act="h-cards">Steckbriefe zu Inseln, Belohnungen und Wind</button>
+    <button class="btn small hm alt" data-act="h-info">Info zu den Rechenpiraten</button></div>
+    <div class="row" style="justify-content:flex-start"><button class="btn ghost" data-act="h-back">${from === 'teacher' ? 'Zurück zum Lehrerbereich' : 'Schließen'}</button></div>`, 'help');
+}
+function helpBack() { if (helpFrom === 'teacher') { $('#ov-card').innerHTML = settingsHTML(); ovMode = 'settings'; $('#ov').scrollTop = 0; } else { closeOv(); refreshScreen(); } }
+function openCards(i) {
+  const back = '<button class="btn ghost" data-act="h-menu">Zurück zur Hilfe</button>';
+  if (i === 'all') {
+    openOv(`<h2>Alle Steckbriefe</h2><div class="sball">${CARDS.map(k => `<div class="sbc"><h3>${k.t}</h3>${k.rows.map(([a, b]) => `<p><b>${a}:</b> ${b}</p>`).join('')}</div>`).join('')}</div>
+      <div class="row" style="justify-content:flex-start"><button class="btn small alt" data-act="h-card" data-v="0">Einzeln blättern</button>${back}</div>`, 'help');
+    return;
+  }
+  i = (i + CARDS.length) % CARDS.length;
+  const k = CARDS[i];
+  openOv(`<p class="muted">Steckbrief ${i + 1} von ${CARDS.length}</p><h2>${k.t}</h2>
+    <dl class="sb">${k.rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
+    <div class="sbnav"><button class="btn small alt" data-act="h-card" data-v="${i - 1}" aria-label="Vorheriger Steckbrief">◀</button>
+      <div class="sbdots">${CARDS.map((x, j) => `<button class="${j === i ? 'sel' : ''}" data-act="h-card" data-v="${j}" aria-label="${x.t}"></button>`).join('')}</div>
+      <button class="btn small alt" data-act="h-card" data-v="${i + 1}" aria-label="Nächster Steckbrief">▶</button></div>
+    <div class="row" style="justify-content:flex-start"><button class="btn small alt" data-act="h-card" data-v="all">Alle im Überblick</button>${back}</div>`, 'help');
+}
+function openInfo() {
+  openOv(`<h2>Die Rechenpiraten</h2>
+    <p>Lernspiel für die 3. Klasse: Punkt vor Strich im Zahlenraum bis 100 mit allen vier Rechenarten. Die Kinder suchen die Punktrechnungen selbst, schreiben die Zwischenergebnisse wie im Heft unter einen Bogen und prüfen auf den Bonus-Felsen fremde Rechenwege.</p>
+    <p>In dieser Version stellen die Kinder alles selbst ein: Sie legen ihr Profil an und wählen den Wind auf der Seekarte. Jede Insel hat 8 Aufgaben. Das Spiel läuft ohne Töne. Wenn alle Inseln geschafft sind, beginnt eine neue Runde.</p>
+    <p>Alle Daten (Profile, Inseln, Sterne, Goldtaler) bleiben <b>nur auf diesem Gerät</b> im Browser gespeichert. Es wird nichts ins Internet übertragen.</p>
+    <p class="credit">${CREDIT}</p>
+    <p class="muted" style="text-align:center">${VERSION}</p>
+    <div class="row" style="justify-content:flex-start"><button class="btn ghost" data-act="h-menu">Zurück zur Hilfe</button></div>`, 'help');
+}
+
+/* ---------- Spielerprofile ---------- */
+let draft = { name:'', av:'parrot' };
+function newFormHTML(ctx) {
+  return `<form class="npform" data-ctx="${ctx}" novalidate>
+    <label class="fl" for="np-name-${ctx}">Name</label>
+    <input id="np-name-${ctx}" class="tin" maxlength="16" autocomplete="off" value="${esc(draft.name)}" placeholder="Vorname oder Spitzname">
+    <span class="fl" id="np-avl-${ctx}">Bild</span>
+    <div class="avgrid" role="radiogroup" aria-labelledby="np-avl-${ctx}">${AV.map(a => `<button type="button" class="avpick" role="radio" aria-checked="${draft.av === a.id}" data-act="avpick" data-av="${a.id}">${avSVG(a.id)}</button>`).join('')}</div>
+    <p class="ferr" hidden></p>
+    <button class="btn" type="submit">${ctx === 'kid' ? 'Los geht\'s!' : 'Profil anlegen'}</button></form>`;
+}
+function renderWho() {
+  const list = store.order.map(id => store.players[id]).filter(Boolean), can = store.settings.kidsCreate;
+  let h = '<h2>Wer spielt?</h2>';
+  if (list.length) h += `<div class="pgrid">${list.map(p => `<button class="pcard" data-act="choose" data-id="${p.id}">${avSVG(p.av)}<b>${esc(p.name)}</b><small>${(p.round || 1) > 1 ? 'Runde ' + p.round + ' · ' : ''}${starSum(p)} ★ · ${p.coins} Taler</small></button>`).join('')}${can ? '<button class="pcard new" data-act="newp"><span class="plus" aria-hidden="true">+</span><b>Neuer Pirat</b><small>Profil anlegen</small></button>' : ''}</div>`;
+  else if (can) h += `<p>Leg dein Piratenprofil an: Name eintippen, Bild aussuchen, und los geht's!</p>${newFormHTML('kid')}`;
+  else h += '<p>Hier sind noch keine Piraten angemeldet.</p>';
+  $('#who').innerHTML = h + '<p class="credit" data-credit></p>';
+  fillCredits();
+}
+
+/* ---------- Karte ---------- */
+function islandArt(art) {
+  if (art === 'rock') return `<svg class="art" viewBox="0 0 120 84" aria-hidden="true"><ellipse cx="60" cy="66" rx="54" ry="14" fill="#7fd6dc" opacity=".45"/><path d="M16 66 L30 36 L44 42 L58 16 L74 38 L88 30 L104 66Z" fill="#8a989f"/><path d="M58 16 L66 66 L44 66Z" fill="#6c7a82"/><circle cx="84" cy="46" r="12" fill="#eaf8f7" stroke="#16323f" stroke-width="4"/><path d="M92 55 L103 66" stroke="#16323f" stroke-width="6" stroke-linecap="round"/></svg>`;
+  let hill = `<path d="M22 58 Q40 26 66 32 Q90 38 98 58Z" fill="#2f9a57"/>`;
+  let extra = '';
+  if (art === 'volcano') { hill = `<path d="M24 60 L50 22 L66 22 L94 60Z" fill="#6e4b3a"/><path d="M50 22 L66 22 L62 32 L55 30Z" fill="#e8584a"/>`; extra = `<circle cx="60" cy="12" r="5" fill="#cfd8db" opacity=".9"/><circle cx="68" cy="6" r="4" fill="#cfd8db" opacity=".7"/>`; }
+  if (art === 'gull') extra = `<path d="M14 20 q6 -7 12 0 q6 -7 12 0" stroke="#16323f" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M34 8 q4 -5 8 0 q4 -5 8 0" stroke="#16323f" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  if (art === 'shark') extra = `<path d="M4 70 L16 46 L26 70Z" fill="#4f6b78"/>`;
+  if (art === 'coco') extra = `<circle cx="70" cy="22" r="3.6" fill="#6e4b3a"/><circle cx="76" cy="23" r="3.6" fill="#6e4b3a"/><circle cx="73" cy="27" r="3.6" fill="#6e4b3a"/>`;
+  if (art === 'fog') extra = `<rect x="6" y="40" width="44" height="7" rx="3.5" fill="#eaf8f7" opacity=".85"/><rect x="62" y="48" width="50" height="7" rx="3.5" fill="#eaf8f7" opacity=".8"/>`;
+  if (art === 'treasure') extra = `<path d="M30 54 L42 64 M42 54 L30 64" stroke="#e8584a" stroke-width="4.5" stroke-linecap="round"/><rect x="48" y="50" width="18" height="12" rx="2" fill="#8a5a33"/><rect x="48" y="50" width="18" height="4" fill="#ffc63f"/>`;
+  const palm = art === 'volcano' ? '' : `<path d="M78 56 Q82 36 74 20" stroke="#8a5a33" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M74 20 q-14 -6 -24 4 M74 20 q-6 -12 -18 -12 M74 20 q8 -12 20 -8 M74 20 q14 -2 20 10" stroke="#3fbf6a" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  return `<svg class="art" viewBox="0 0 120 84" aria-hidden="true"><ellipse cx="60" cy="64" rx="56" ry="16" fill="#7fd6dc" opacity=".5"/><ellipse cx="60" cy="60" rx="46" ry="13" fill="#f5dca3"/>${hill}${palm}${extra}</svg>`;
+}
+function starsText(n) { return `<span class="st">${[0,1,2].map(k => k < n ? '<i>★</i>' : '★').join('')}</span>`; }
+const allDone = () => ISL.every(i => isDone(i.id));
+const roundOf = p => p.round || 1;
+function renderRound() {
+  const pl = me(), el = $('#roundbar'); if (!pl || !el) return;
+  const r = roundOf(pl);
+  el.innerHTML = allDone()
+    ? `<div class="rb-done"><b>Alle Inseln geschafft!</b><span>Du hast Runde ${r} gemeistert. Starte eine neue Runde, deine Goldtaler behältst du.</span></div><button class="btn" data-act="newround">Runde ${r + 1} starten</button>`
+    : `<span class="rb-chip">Runde ${r}</span><span class="rb-txt">${doneCount(pl)} von ${ISL.length} Inseln geschafft</span>`;
+}
+function newRound() {
+  const pl = me(); if (!pl || !allDone()) return;
+  pl.rounds = (pl.rounds || []).concat([{ round:roundOf(pl), stars:starSum(pl) }]);
+  pl.round = roundOf(pl) + 1; pl.prog = {}; save();
+  goMap(); toast(`Runde ${pl.round} beginnt. Leinen los!`);
+}
+function renderMap() {
+  updateHeader();
+  renderRound();
+  $('.windbar').hidden = !store.settings.kidsWind;
+  document.querySelectorAll('[data-wind]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.wind === windNow())));
+  $('#islands').innerHTML = ISL.map(i => {
+    const un = unlocked(i), done = isDone(i.id), st = (prog()[i.id] || {}).stars || 0;
+    const cls = ['isl', i.kind, i.big ? 'big' : '', un ? '' : 'locked', done ? 'done' : ''].join(' ');
+    const badge = i.kind === 'bonus' ? 'Bonus' : i.no;
+    const label = `${i.name}, ${i.kind === 'bonus' ? 'Bonus-Insel' : 'Insel ' + i.no}${un ? '' : ', noch gesperrt'}${done ? ', ' + st + ' von 3 Sternen' : ''}`;
+    return `<button class="${cls}" data-act="isl" data-id="${i.id}" aria-label="${label}" style="--wx:${i.w[0]}%;--wy:${i.w[1]}%;--tx:${i.t[0]}%;--ty:${i.t[1]}%">${islandArt(i.art)}<span class="badge">${badge}</span><span class="tag"><b>${i.name}</b>${starsText(st)}</span></button>`;
+  }).join('');
+  const target = MAINS.find(m => unlocked(m) && !isDone(m.id)) || MAINS[MAINS.length - 1];
+  const s = $('#mapship');
+  const wx = target.w[0] < 15 ? target.w[0] + 8 : target.w[0] - 8, wy = target.w[1] - 9;
+  const tx = target.t[0] < 40 ? target.t[0] + 16 : target.t[0] - 16, ty = target.t[1] - 4;
+  s.style.setProperty('--sx', wx + '%'); s.style.setProperty('--sy', wy + '%');
+  s.style.setProperty('--stx', tx + '%'); s.style.setProperty('--sty', ty + '%');
+  updateSoundBtn();
+  fitBoards();
+}
+function updateSoundBtn() {}
+
+/* ---------- Overlay ---------- */
+let ovMode = null, armed = '';
+function openOv(html, mode) { ovMode = mode; $('#ov-card').innerHTML = html; $('#ov').hidden = false; fitBoards(); const f = $('#ov-card').querySelector('[data-autofocus]') || $('#ov-card').querySelector('button'); if (f) f.focus(); }
+function closeOv() { $('#ov').hidden = true; ovMode = null; armed = ''; }
+function rerenderSettings() {
+  const ov = $('#ov'), st = ov.scrollTop, a = document.activeElement, d = a && a.dataset ? { act:a.dataset.act, v:a.dataset.v, id:a.dataset.id } : null;
+  $('#ov-card').innerHTML = settingsHTML(); ovMode = 'settings'; ov.scrollTop = st;
+  if (d && d.act) { const sel = `[data-act="${d.act}"]` + (d.v ? `[data-v="${d.v}"]` : '') + (d.id ? `[data-id="${d.id}"]` : ''); const el = $('#ov-card').querySelector(sel); if (el) el.focus({ preventScroll:true }); }
+}
+function pinHTML() {
+  return `<h2>Lehrerbereich</h2><p>Bitte gib die PIN ein.</p>
+  <form id="pinform" class="pinrow" novalidate><input id="pin-in" class="tin pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="PIN" data-autofocus><button class="btn small" type="submit">Öffnen</button></form>
+  <p class="ferr" id="pin-err" hidden></p>
+  <div class="row" style="justify-content:flex-start"><button class="btn ghost" data-act="close">Abbrechen</button></div>`;
+}
+
+function briefHTML(id) {
+  const i = byId(id), n = store.settings.count, wind = WIND[windNow()];
+  const windTxt = wind.sec ? `${wind.name}: ${wind.sec} s je Rechenschritt` : 'Flaute: ohne Zeitvorgabe';
+  let body;
+  if (i.kind === 'main') {
+    const ex = genMain(i, 1)[0];
+    body = `<p>${i.desc}</p><div><h3>Zum Beispiel</h3><div class="example">${boardStatic(ex.tokens)}</div></div>`;
+  } else {
+    body = `<p>Smutje Fritz hat im Logbuch gerechnet, aber nicht immer richtig. Prüfe jede Rechnung: Stimmt sie oder nicht? Wenn nicht, rechnest du selbst das richtige Ergebnis aus.</p>`;
+  }
+  return `<h2>${i.name}</h2>${body}<div class="facts"><span>${i.short}</span><span>${n} Aufgaben</span><span>${windTxt}</span></div><div class="row" style="justify-content:flex-start"><button class="btn" data-act="start" data-id="${i.id}" data-autofocus>Anlegen!</button><button class="btn ghost" data-act="close">Zurück</button></div>`;
+}
+function settingsHTML() {
+  const s = store.settings;
+  const tog = (act, on, label) => `<button class="toggle" data-act="${act}" aria-pressed="${on}">${label}<span class="sw"></span></button>`;
+  const winds = Object.entries(WIND).map(([k, w]) => `<button data-act="set-wind" data-v="${k}" aria-pressed="${s.wind === k}">${w.name} · ${w.sec ? w.sec + ' s' : 'ohne Zeit'}</button>`).join('');
+  const counts = [5,6,8,10].map(c => `<button data-act="set-count" data-v="${c}" aria-pressed="${s.count === c}">${c}</button>`).join('');
+  const list = store.order.map(id => store.players[id]).filter(Boolean);
+  const plist = list.length ? `<ul class="plist">${list.map(p => `<li>${avSVG(p.av, 'sm')}<span class="pn"><b>${esc(p.name)}</b><small>${doneCount(p)} von ${ISL.length} Inseln · ${starSum(p)} ★ · ${p.coins} Taler</small></span><span class="pact"><button class="mini-btn ${armed === 'r' + p.id ? 'armed' : ''}" data-act="p-reset" data-id="${p.id}">${armed === 'r' + p.id ? 'Wirklich?' : 'Neu starten'}</button><button class="mini-btn danger2 ${armed === 'd' + p.id ? 'armed' : ''}" data-act="p-del" data-id="${p.id}">${armed === 'd' + p.id ? 'Wirklich?' : 'Löschen'}</button></span></li>`).join('')}</ul>` : '<p class="muted">Noch keine Profile angelegt.</p>';
+  return `<div class="dhead"><h2>Lehrerbereich</h2><button class="helpbtn" data-act="help-t" data-tour="t-help" aria-label="Hilfe zum Lehrerbereich" title="Hilfe">?</button></div>
+  ${store.pin === '1234' ? '<p class="warn">Du nutzt noch die Start-PIN 1234. Ändere sie weiter unten, damit die Kinder nicht hineinkommen.</p>' : ''}
+  <section class="sec" data-tour="t-wind"><h3>Zeitvorgabe (Wind)</h3><div class="seg">${winds}</div>
+    <p class="muted">Die Zeit gilt je Rechenschritt. Eine Aufgabe mit einer Punktrechnung bekommt drei Schritte (Zeichen finden, Punktrechnung, Ergebnis), mit zwei Punktrechnungen vier. Bei Fehlerdetektiv-Aufgaben kommen zwei Schritte fürs Prüfen und Begründen dazu.</p>
+    <p class="hint"><b>Empfehlung:</b> Für den Einstieg Flaute oder Brise. Sturm mit 10 Sekunden pro Schritt ist für die 3. Klasse sehr knapp, besonders bei Geteiltaufgaben. Er ist als Herausforderung für schnelle Rechnerinnen und Rechner gedacht.</p>
+    <div data-tour="t-kidswind">${tog('kidswind', s.kidsWind, 'Kinder dürfen den Wind auf der Karte selbst wählen')}</div>
+    <p class="muted">${s.kidsWind ? 'Die Auswahl hier stellt den Wind für alle Spieler neu ein. Danach kann jedes Kind ihn auf der Karte ändern.' : 'Alle spielen mit dem Wind, den du hier einstellst.'}</p></section>
+  <section class="sec" data-tour="t-count"><h3>Aufgaben pro Insel</h3><div class="seg">${counts}</div></section>
+  <section class="sec" data-tour="t-profiles"><h3>Spielerprofile</h3>
+    ${tog('profiles', s.profiles, 'Spielerprofile mit Name und Bild verwenden')}
+    ${s.profiles ? `${tog('kidscreate', s.kidsCreate, 'Kinder dürfen selbst Profile anlegen')}${plist}<h3 style="margin-top:6px">Neues Profil</h3>${newFormHTML('teacher')}<p class="muted">Namen und Spielstände bleiben nur in diesem Browser auf diesem Gerät. Am besten nur Vornamen oder Spitznamen verwenden.</p>` : '<p class="muted">Ohne Profile teilen sich alle Kinder an diesem Gerät einen Spielstand.</p>'}</section>
+  <section class="sec" data-tour="t-more"><h3>Weitere Einstellungen</h3>${tog('unlock', s.unlockAll, 'Alle Inseln freischalten')}${tog('sound2', s.sound, 'Töne abspielen')}</section>
+  <section class="sec" data-tour="t-pin"><h3>PIN ändern</h3>
+    <form id="pinchange" class="pinrow" novalidate><input id="pin-new" class="tin pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Neue PIN" aria-label="Neue PIN"><input id="pin-new2" class="tin pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="Wiederholen" aria-label="Neue PIN wiederholen"><button class="btn small" type="submit">Speichern</button></form>
+    <p class="ferr" id="pinc-err" hidden></p><p class="muted">4 bis 6 Ziffern. Die PIN hält neugierige Kinder fern. Eine echte Sicherung ist sie nicht, weil alles im Browser gespeichert wird.</p></section>
+  <section class="sec"><h3>Was das Spiel garantiert</h3><p class="muted">Alle Zahlen, Zwischenergebnisse und Ergebnisse liegen zwischen 0 und 100. Mal- und Geteiltaufgaben kommen aus dem kleinen Einmaleins, Geteiltaufgaben gehen immer ohne Rest auf.</p></section>
+  <div class="row" data-tour="t-reset" style="justify-content:space-between;align-items:center"><button class="danger ${armed === 'all' ? 'armed' : ''}" data-act="reset">${armed === 'all' ? 'Wirklich alle Spielstände löschen?' : 'Alle Spielstände löschen'}</button><button class="btn" data-act="close">Fertig</button></div>
+  <p class="credit">${CREDIT}</p>`;
+}
+
+/* ---------- Spiel ---------- */
+let P = null, raf = 0;
+function startIsland(id) {
+  if (!me()) { closeOv(); goMap(); return; }
+  const isl = byId(id), n = store.settings.count;
+  const tasks = isl.kind === 'bonus' ? genDet(isl, n) : genMain(isl, n);
+  P = { isl, tasks, n:tasks.length, idx:0, taler:0, results:[], quitArm:false, stats:{}, timeouts:0, bottleDone:false };
+  closeOv(); show('play'); beginTask();
+}
+function parse(t) {
+  const segs = [], sops = []; let i = 0;
+  while (i < t.length) {
+    if (isP(t[i+1])) { segs.push({ p:true, a:t[i], op:t[i+1], b:t[i+2], v:ap(t[i], t[i+1], t[i+2]), done:false, arc:false }); i += 3; }
+    else { segs.push({ p:false, v:t[i] }); i += 1; }
+    if (i < t.length) { sops.push(t[i]); i += 1; }
+  }
+  return { segs, sops };
+}
+function beginTask() {
+  const t = P.tasks[P.idx], b = parse(t.tokens);
+  Object.assign(P, { t, segs:b.segs, sops:b.sops, mistakes:0, tries:0, input:'', sel:-1, dDone:false, dFresh:false, line2:false });
+  P.phase = t.kind === 'main' ? 'pick' : 'judge';
+  if (t.kind === 'main') opp('regel');
+  render();
+  if (t.retry && P.idx === P.n) setBubble('Flaschenpost! Diese Aufgaben waren knifflig. Versuch sie einfach noch einmal.');
+  else if (t.kind === 'main') setBubble(P.idx === 0 ? 'Denk an die Piratenregel: Punkt vor Strich! Welches Zeichen rechnest du zuerst?' : 'Neue Aufgabe! Welches Rechenzeichen ist zuerst dran?');
+  else setBubble('Schau dir die Rechnung von Fritz genau an. Stimmt das Ergebnis?');
+  startTimer();
+}
+/* Fehlerarten zählen: [Fehler, Gelegenheiten] */
+const opp = c => { (P.stats[c] = P.stats[c] || [0, 0])[1]++; };
+const err = c => { (P.stats[c] = P.stats[c] || [0, 0])[0]++; };
+const segCat = g => g.op === '·' ? 'mal' : 'geteilt';
+const inputPhase = () => P && (P.phase === 'sub' || P.phase === 'final');
+const nextOpen = () => P.segs.findIndex(x => x.p && !x.done);
+
+function tok(x, cls = '') { return isOp(x) ? `<span class="opx">${x}</span>` : `<span class="num ${cls}">${x}</span>`; }
+const ARC = '<svg class="arc" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M3 2 Q50 26 97 2"/></svg>';
+const opName = o => ({ '+':'Plus', '−':'Minus', '·':'Mal', ':':'Geteilt' })[o];
+function slotHTML() { return `<span class="slot active ${P.input ? '' : 'empty'}" id="slot">${P.input || '?'}</span>`; }
+const WAIT = '<span class="slot wait" aria-hidden="true"></span>';
+function gridHTML(cols, two) {
+  return `<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(${cols.length},auto)">${cols.map(c => `<div class="c1">${c[0]}</div>`).join('')}${two ? cols.map(c => `<div class="c2">${c[1]}</div>`).join('') : ''}</div></div>`;
+}
+/* Schema:  A + B · C = D   /   A + E = D  — jede Spalte bleibt an ihrem Platz */
+function board(o) {
+  const ph = P.phase, cols = [];
+  P.segs.forEach((g, k) => {
+    if (g.p) {
+      const opH = o.pick && !g.arc ? `<button class="op" data-act="op" data-s="${k}" aria-label="Rechenzeichen ${opName(g.op)}">${g.op}</button>` : `<span class="opx">${g.op}</span>`;
+      const r1 = `<span class="grp"><span class="grp-row ${g.arc ? 'on' : ''} ${P.sel === k ? 'sel' : ''}">${tok(g.a)}${opH}${tok(g.b)}</span>${g.arc ? ARC.replace('class="arc"', `class="arc ${g.arcNew ? 'draw' : ''}"`) : '<span class="arc-space"></span>'}</span>`;
+      g.arcNew = false;
+      const r2 = !g.arc ? '' : g.done ? `<span class="slot filled ${g.fresh ? 'pop' : ''}">${g.v}</span>` : (ph === 'sub' && P.sel === k ? slotHTML() : ph === 'sub' ? `<button class="slot wait pickslot" data-act="slot" data-s="${k}" aria-label="Zuerst ${g.a} ${g.op} ${g.b} rechnen"></button>` : WAIT);
+      g.fresh = false;
+      cols.push([r1, r2]);
+    } else cols.push([tok(g.v), tok(g.v)]);
+    if (k < P.sops.length) {
+      const so = P.sops[k];
+      cols.push([o.pick ? `<button class="op" data-act="sop" data-s="${k}" aria-label="Rechenzeichen ${opName(so)}">${so}</button>` : `<span class="opx">${so}</span>`, `<span class="opx">${so}</span>`]);
+    }
+  });
+  cols.push(['<span class="eq">=</span>', '<span class="eq">=</span>']);
+  const d1 = o.claim || (P.dDone ? `<span class="num ${P.dFresh ? 'pop' : ''}">${P.t.value}</span>` : '<span class="num qm">?</span>');
+  const d2 = P.dDone ? `<span class="num final ${P.dFresh ? 'pop' : ''}">${P.t.value}</span>` : (ph === 'final' ? slotHTML() : WAIT);
+  P.dFresh = false;
+  cols.push([d1, d2]);
+  return gridHTML(cols, o.two && P.line2);
+}
+function boardStatic(t) {
+  const { segs, sops } = parse(t), v = solve(t).value, cols = [];
+  segs.forEach((g, k) => {
+    if (g.p) cols.push([`<span class="grp"><span class="grp-row on">${tok(g.a)}${tok(g.op)}${tok(g.b)}</span>${ARC}</span>`, `<span class="slot filled">${g.v}</span>`]);
+    else cols.push([tok(g.v), tok(g.v)]);
+    if (k < sops.length) cols.push([tok(sops[k]), tok(sops[k])]);
+  });
+  cols.push(['<span class="eq">=</span>', '<span class="eq">=</span>'], [tok(v), `<span class="num final">${v}</span>`]);
+  return gridHTML(cols, true);
+}
+function sheetMain() {
+  const ph = P.phase; let instr;
+  if (ph === 'pick') instr = P.segs.some(g => g.arc) ? 'Gibt es noch ein Mal- oder Geteiltzeichen? Tippe es an. Wenn nicht, tippe auf „Fertig“.' : 'Welches Rechenzeichen rechnest du zuerst? Tippe es an.';
+  else if (ph === 'sub') { const g = P.segs[P.sel]; instr = `Rechne ${g.a} ${g.op} ${g.b}. Das Ergebnis kommt unter den Bogen.`; }
+  else if (ph === 'final') instr = P.sops.length > 1 ? 'Rechne die untere Zeile aus, von links nach rechts.' : 'Rechne jetzt die untere Zeile aus.';
+  else if (ph === 'done') instr = 'Geschafft! Das Ergebnis steht rechts.';
+  else instr = 'Die Sanduhr ist abgelaufen. So wird gerechnet:';
+  return `<p class="instr">${instr}</p><div class="calc">${board({ pick: ph === 'pick', two: true })}</div>`;
+}
+function explainDet(t) {
+  const s = solve(t.tokens); let h = '<div class="explain">';
+  if (t.type === 'ltr') h += `<p><b>Fritz hat einfach von links nach rechts gerechnet:</b> ${t.ltr.steps.join(', ')}. Dabei gilt doch Punkt vor Strich!</p>`;
+  else if (t.type === 'slip') h += `<p><b>Fritz hat die Regel beachtet, sich aber verrechnet:</b> ${t.slip.label} ist ${t.slip.right}, nicht ${t.slip.wrong}.</p>`;
+  else h += `<p><b>Fritz hat diesmal alles richtig gerechnet.</b></p>`;
+  h += `<p>So rechnest du richtig:</p><ol>${s.steps.map(x => `<li>${x}</li>`).join('')}</ol></div>`;
+  return h;
+}
+function sheetDet() {
+  const t = P.t, ph = P.phase, over = ph === 'done' || ph === 'timeout', wrongClaim = t.type !== 'right';
+  let instr;
+  if (ph === 'judge') instr = 'Stimmt die Rechnung von Smutje Fritz?';
+  else if (ph === 'why') instr = 'Was hat Fritz falsch gemacht? Lies seine Notizen.';
+  else if (ph === 'sub') { const g = P.segs[P.sel]; instr = `Rechne selbst: ${g.a} ${g.op} ${g.b}. Das Ergebnis kommt unter den Bogen.`; }
+  else if (ph === 'final') instr = 'Rechne jetzt die untere Zeile aus.';
+  else if (ph === 'done') instr = 'Fall gelöst!';
+  else instr = 'Die Sanduhr ist abgelaufen.';
+  let claim = `<span class="num claimed ${over && wrongClaim ? 'struck' : ''}">${t.claim}</span>`;
+  if (over && wrongClaim) claim = `<span class="dpair">${claim}<span class="num right">${t.value}</span></span>`;
+  let h = `<p class="instr">${instr}</p><div class="log"><p class="log-head">Logbuch von Smutje Fritz</p><div class="calc claim">${board({ pick:false, two: ph !== 'judge' && ph !== 'why', claim })}</div>`;
+  if (ph === 'why') h += `<div class="notes"><p>Fritz' Nebenrechnung:</p><ol>${(t.type === 'ltr' ? t.ltr.steps : t.slip.steps).map(x => `<li>${x}</li>`).join('')}</ol></div>`;
+  h += '</div>';
+  if (over) h += explainDet(t);
+  return h;
+}
+function keypadHTML(on) {
+  const k = d => `<button class="key" data-act="key" data-k="${d}" ${on ? '' : 'disabled'}>${d}</button>`;
+  return `<div class="keypad">${[1,2,3,4,5,6,7,8,9].map(k).join('')}<button class="key del" data-act="key" data-k="del" aria-label="Löschen" ${on ? '' : 'disabled'}>⌫</button>${k(0)}<button class="key ok" data-act="key" data-k="ok" ${on ? '' : 'disabled'}>Prüfen</button></div>`;
+}
+function controlsHTML() {
+  const ph = P.phase;
+  if (ph === 'pick') { const any = P.segs.some(g => g.arc); return `<button class="btn fertig" data-act="fertig" ${any ? '' : 'disabled'}>Fertig, keine weitere Punktrechnung</button>` + keypadHTML(false) + (any ? '' : '<p class="keyhint" style="margin-top:10px">Tippe im Heft alle Mal- und Geteiltzeichen an. Dann tippe auf „Fertig“.</p>'); }
+  if (inputPhase()) return keypadHTML(true);
+  if (ph === 'why') return `<div class="why"><button class="btn whybtn" data-act="why" data-w="ltr">Er hat von links nach rechts gerechnet.<small>Punkt vor Strich vergessen</small></button><button class="btn whybtn" data-act="why" data-w="slip">Er hat sich verrechnet.<small>Regel beachtet, aber falsch gerechnet</small></button></div>`;
+  if (ph === 'judge') return `<div class="judge"><button class="btn yes" data-act="judge" data-j="ok">Stimmt!</button><button class="btn no" data-act="judge" data-j="bad">Stimmt nicht!</button></div>`;
+  const tal = P.results[P.results.length - 1] || 0, last = P.idx === P.tasks.length - 1;
+  const bottleNext = last && !P.bottleDone && P.results.some(r => r <= 1);
+  return `<div class="donebox"><div class="gain"><svg aria-hidden="true"><use href="#coin"/></svg>+${tal} Goldtaler</div><button class="btn" data-act="next" id="btn-next">${bottleNext ? 'Zur Flaschenpost' : last ? 'Zur Auswertung' : 'Nächste Aufgabe'}</button></div>`;
+}
+function render() {
+  $('#pb-isl').textContent = P.isl.name;
+  $('#pb-count').textContent = P.idx >= P.n ? `Flaschenpost ${P.idx - P.n + 1} von ${P.tasks.length - P.n}` : `Aufgabe ${P.idx + 1} von ${P.n}`;
+  $('#pb-taler').textContent = P.taler;
+  $('#pb-dots').innerHTML = P.tasks.map((t, k) => {
+    const b = t.retry ? ' bottle' : '', sep = k === P.n ? '<i class="dsep"></i>' : '';
+    if (k < P.results.length) { const r = P.results[k]; return `${sep}<span class="${r === 3 ? 'ok' : r > 0 ? 'half' : 'miss'}${b}"></span>`; }
+    return `${sep}<span class="${k === P.idx ? 'cur' : ''}${b}"></span>`;
+  }).join('');
+  $('#sheet-body').innerHTML = P.t.kind === 'main' ? sheetMain() : sheetDet();
+  $('#controls').innerHTML = controlsHTML();
+  const q = $('#btn-quit'); q.textContent = 'Zur Karte'; P.quitArm = false;
+  fitBoards();
+  const nb = $('#btn-next'); if (nb) nb.focus({ preventScroll:true });
+}
+/* Rechnung immer vollständig sichtbar: zu breite Rechnungen werden verkleinert statt gescrollt */
+function fitBoards() {
+  document.querySelectorAll('.board-wrap').forEach(w => {
+    const b = w.firstElementChild; if (!b) return;
+    b.style.fontSize = '';
+    const avail = w.clientWidth, need = b.scrollWidth;
+    if (avail > 0 && need > avail) b.style.fontSize = (Math.floor(avail / need * 98) / 100) + 'em';
+  });
+}
+let fitT = 0;
+window.addEventListener('resize', () => { clearTimeout(fitT); fitT = setTimeout(fitBoards, 80); });
+function setBubble(text, mood = '') { $('#bubble').className = 'bubble ' + mood; $('#say').textContent = text; }
+function updateSlot() { const s = $('#slot'); if (!s) return; s.textContent = P.input || '?'; s.classList.toggle('empty', !P.input); }
+function shake(el) { if (!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+/* Timer */
+function startTimer() {
+  stopTimer();
+  const per = WIND[windNow()].sec, el = $('#timer');
+  if (!per) { el.hidden = true; return; }
+  const steps = P.t.tokens.filter(isP).length + (P.t.kind === 'main' ? 2 : 3);
+  P.tTotal = per * steps * 1000; P.tEnd = performance.now() + P.tTotal; P.tLeft = 0;
+  el.hidden = false; tick();
+}
+function tick() {
+  if (!P || !P.tEnd) return;
+  const left = P.tEnd - performance.now(), frac = Math.max(0, left / P.tTotal), f = $('#tfill');
+  f.style.width = (frac * 100) + '%'; f.classList.toggle('warn', frac < .25);
+  $('#ttxt').textContent = Math.ceil(Math.max(0, left) / 1000) + ' s';
+  if (left <= 0) { P.tEnd = 0; timeout(); return; }
+  raf = requestAnimationFrame(tick);
+}
+function stopTimer() { cancelAnimationFrame(raf); if (P) P.tEnd = 0; }
+document.addEventListener('visibilitychange', () => {
+  if (!P || screen !== 'play') return;
+  if (document.hidden && P.tEnd) { P.tLeft = P.tEnd - performance.now(); cancelAnimationFrame(raf); P.tEnd = 0; }
+  else if (!document.hidden && P.tLeft > 0) { P.tEnd = performance.now() + P.tLeft; P.tLeft = 0; tick(); }
+});
+function solveAll() { P.segs.forEach(g => { if (g.p) { g.done = true; g.arc = true; } }); P.dDone = true; P.line2 = true; }
+function timeout() {
+  if (P.phase === 'done' || P.phase === 'timeout') return;
+  solveAll(); P.phase = 'timeout'; P.results.push(0); P.timeouts++; sfx('bad');
+  render();
+  setBubble('Die Sanduhr ist abgelaufen. Schau dir den Rechenweg an, dann geht es weiter.', 'bad');
+}
+
+/* Hauptaufgaben */
+function hintPunkt(a, op, b) {
+  if (op === ':') return `Wie oft passt die ${b} in die ${a}? Denk an die Malaufgabe: ? · ${b} = ${a}.`;
+  const s = Math.min(a, b), l = Math.max(a, b);
+  if (s <= 5) return `${s} · ${l} ist so viel wie ${Array(s).fill(l).join(' + ')}.`;
+  return `Rechne erst 5 · ${l} = ${5 * l}. Dann kommen noch ${s - 5} · ${l} dazu.`;
+}
+function pickOp(k) {
+  if (P.phase !== 'pick') return;
+  const g = P.segs[k]; if (!g || !g.p || g.arc) return;
+  sfx('tap'); g.arc = true; g.arcNew = true;
+  const n = P.segs.filter(x => x.arc).length;
+  render();
+  setBubble(n === 1 ? `Richtig, ${opName(g.op)} kommt vor Plus und Minus! Gibt es noch ein Mal- oder Geteiltzeichen? Wenn nicht, tippe auf „Fertig“.` : `Richtig, auch ${opName(g.op)} ist eine Punktrechnung! Gibt es noch eine? Sonst tippe auf „Fertig“.`, 'good');
+}
+function fertig() {
+  if (P.phase !== 'pick' || !P.segs.some(g => g.arc)) return;
+  if (P.segs.some(x => x.p && !x.arc)) {
+    P.mistakes++; err('regel'); sfx('bad'); shake($('[data-act="fertig"]'));
+    setBubble('Schau noch einmal genau hin: Da ist noch ein Mal- oder Geteiltzeichen!', 'bad'); return;
+  }
+  sfx('tap'); P.line2 = true; P.phase = 'sub'; P.sel = nextOpen(); P.tries = 0; P.input = '';
+  const many = P.segs.filter(x => x.p).length > 1, sg = P.segs[P.sel];
+  render();
+  setBubble(many ? `Super, beide Punktrechnungen gefunden! Rechne zuerst ${sg.a} ${sg.op} ${sg.b}, oder tippe auf das andere Kästchen.` : `Prima, alle gefunden! Rechne jetzt ${sg.a} ${sg.op} ${sg.b}.`, 'good');
+}
+function pickStrich(k) {
+  if (P.phase !== 'pick') return;
+  P.mistakes++; err('regel'); sfx('bad');
+  shake(document.querySelector(`[data-act="sop"][data-s="${k}"]`));
+  setBubble(P.segs.some(g => g.arc) ? 'Halt! Plus und Minus kommen erst nach den Punktrechnungen dran.' : 'Halt! Punkt vor Strich: Mal (·) und Geteilt (:) kommen zuerst.', 'bad');
+}
+function chooseSlot(k) {
+  if (P.phase !== 'sub') return;
+  const g = P.segs[k]; if (!g || !g.p || g.done || !g.arc || P.sel === k) return;
+  sfx('tap'); P.sel = k; P.input = ''; P.tries = 0; render();
+  setBubble(`Gut, dann rechne zuerst ${g.a} ${g.op} ${g.b}.`);
+}
+function solveSeg(ok) {
+  const g = P.segs[P.sel]; g.done = true; g.fresh = true; P.tries = 0; P.input = ''; opp(segCat(g));
+  const nx = nextOpen();
+  if (nx >= 0) { P.phase = 'sub'; P.sel = nx; if (!P.segs[nx].arc) { P.segs[nx].arc = true; P.segs[nx].arcNew = true; } }
+  else { P.phase = 'final'; P.sel = -1; }
+  render();
+  if (ok) setBubble(nx >= 0 ? `Richtig! Jetzt ${P.segs[nx].a} ${P.segs[nx].op} ${P.segs[nx].b}.` : 'Prima! Jetzt rechne die untere Zeile aus.', 'good');
+}
+function finishFinal(ok) {
+  P.dDone = true; P.dFresh = true; opp('strich');
+  if (P.t.kind === 'main' || !ok) finishTask(ok ? undefined : ' ');
+  else finishTask(P.mistakes === 0 ? 'Fehler gefunden und richtig verbessert. Starke Detektivarbeit!' : 'Richtig verbessert!');
+}
+function finishTask(msg) {
+  stopTimer();
+  const tal = Math.max(0, 3 - P.mistakes);
+  P.taler += tal; P.results.push(tal); P.phase = 'done';
+  render();
+  if (msg) setBubble(msg, tal === 3 ? 'good' : '');
+  else setBubble(tal === 3 ? pick(['Volltreffer, Kapitän! Alles richtig.','Klasse gerechnet!','Super, ohne einen Fehler!']) : tal > 0 ? 'Geschafft! Beim nächsten Mal klappt es noch besser.' : 'Geschafft. Merk dir den Rechenweg, dann klappt es beim nächsten Mal.', tal === 3 ? 'good' : '');
+  if (tal > 0) sfx(tal === 3 ? 'win' : 'good');
+}
+function wrongStep(exp, label, reveal, hint) {
+  P.mistakes++; P.tries++; P.input = ''; sfx('bad');
+  if (P.tries >= 2) { reveal(); setBubble(`So geht es: ${label} = ${exp}. Merk es dir gut!`, 'bad'); }
+  else { updateSlot(); shake($('#slot')); setBubble('Nicht ganz. ' + hint, 'bad'); }
+}
+function check() {
+  if (!P.input) { setBubble('Tippe zuerst eine Zahl ein.'); shake($('#slot')); return; }
+  const n = +P.input;
+  if (P.phase === 'sub') {
+    const g = P.segs[P.sel];
+    if (n === g.v) { sfx('good'); solveSeg(true); }
+    else { err(segCat(g)); wrongStep(g.v, `${g.a} ${g.op} ${g.b}`, () => solveSeg(false), hintPunkt(g.a, g.op, g.b)); }
+  } else if (P.phase === 'final') {
+    const exp = P.t.value;
+    if (n === exp) { finishFinal(true); return; }
+    const vals = P.segs.map(g => g.v), line = [vals[0]];
+    P.sops.forEach((o, k) => line.push(o, vals[k+1]));
+    let hint = 'Rechne in kleinen Schritten: erst die Zehner, dann die Einer.';
+    if (P.sops.length > 1 && n === ap(vals[0], P.sops[0], ap(vals[1], P.sops[1], vals[2]))) hint = 'Bei Plus und Minus rechnest du von links nach rechts.';
+    err('strich'); wrongStep(exp, fmt(line), () => finishFinal(false), hint);
+  }
+}
+function press(k) {
+  if (!inputPhase()) return;
+  if (k === 'ok') return check();
+  if (k === 'del') P.input = P.input.slice(0, -1);
+  else if (P.input.length < 3) P.input = (P.input === '0' ? '' : P.input) + k;
+  updateSlot();
+}
+/* Fehlerdetektiv */
+function startFix(msg, mood) { P.phase = 'sub'; P.sel = nextOpen(); P.line2 = true; P.segs[P.sel].arc = true; P.segs[P.sel].arcNew = true; P.input = ''; P.tries = 0; render(); setBubble(msg, mood); }
+function judge(j) {
+  if (P.phase !== 'judge') return;
+  const claimRight = P.t.type === 'right';
+  opp('pruefen');
+  if (j === 'ok' && claimRight) { solveAll(); finishTask('Stimmt genau! Fritz hat diesmal richtig gerechnet.'); }
+  else if (j === 'bad' && !claimRight) { sfx('good'); P.phase = 'why'; render(); setBubble('Gut erkannt, da stimmt etwas nicht! Was hat Fritz falsch gemacht?', 'good'); }
+  else if (j === 'ok' && !claimRight) { P.mistakes++; err('pruefen'); sfx('bad'); P.phase = 'why'; render(); setBubble('Schau noch einmal genau hin: Das Ergebnis stimmt nicht! Lies Fritz\' Notizen. Was hat er falsch gemacht?', 'bad'); }
+  else { P.mistakes = 3; err('pruefen'); sfx('bad'); solveAll(); finishTask(' '); setBubble('Diesmal hatte Fritz recht. Schau dir den Rechenweg an.', 'bad'); }
+}
+function why(w) {
+  if (P.phase !== 'why') return;
+  const t = P.t; opp('fehler');
+  if (w === t.type) { sfx('good'); startFix(t.type === 'ltr' ? 'Genau! Fritz hat Punkt vor Strich vergessen. Jetzt rechne du richtig: erst die Punktrechnung.' : `Genau! Fritz hat sich verrechnet: ${t.slip.label} ist nicht ${t.slip.wrong}. Jetzt rechne du richtig.`, 'good'); }
+  else { P.mistakes++; err('fehler'); sfx('bad'); startFix(t.type === 'ltr' ? `Nicht ganz. Fritz hat einfach von links nach rechts gerechnet: ${t.ltr.steps[0]}. Dabei gilt Punkt vor Strich! Jetzt rechne du richtig.` : `Nicht ganz. Fritz hat die Punktrechnung zuerst gerechnet, aber ${t.slip.label} ist nicht ${t.slip.wrong}. Jetzt rechne du richtig.`, 'bad'); }
+}
+function next() {
+  if (!(P.phase === 'done' || P.phase === 'timeout')) return;
+  P.idx++;
+  if (P.idx === P.n && !P.bottleDone) {
+    P.bottleDone = true;
+    P.tasks.slice(0, P.n).forEach((t, k) => { if (P.results[k] <= 1) P.tasks.push({ ...t, retry:true }); });
+  }
+  if (P.idx >= P.tasks.length) showResults(); else beginTask();
+}
+
+/* Auswertung */
+const SKILLS = [
+  ['regel', 'Punkt vor Strich erkennen', 'Such zuerst nach · und :. Die kommen vor Plus und Minus.'],
+  ['mal', 'Malaufgaben', 'Übe die Einmaleins-Reihen, bei denen du gestolpert bist.'],
+  ['geteilt', 'Geteiltaufgaben', 'Denk bei Geteilt an die passende Malaufgabe.'],
+  ['strich', 'Plus und Minus', 'Rechne in Schritten: erst die Zehner, dann die Einer.'],
+  ['pruefen', 'Rechnungen prüfen', 'Rechne Fritz\' Aufgabe im Kopf nach, bevor du entscheidest.'],
+  ['fehler', 'Fehler benennen', 'Schau in Fritz\' Notizen: Was hat er zuerst gerechnet?'],
+];
+function skillsHTML() {
+  const rows = SKILLS.filter(([k]) => P.stats[k] && P.stats[k][1] > 0).map(([k, label, tip]) => {
+    const [e, o] = P.stats[k], q = e / o;
+    const st = e === 0 ? ['sicher', 'good'] : q <= .25 ? ['fast sicher', 'mid'] : ['noch üben', 'low'];
+    return { label, tip, st };
+  });
+  if (!rows.length) return '';
+  const weak = rows.find(r => r.st[1] === 'low') || rows.find(r => r.st[1] === 'mid');
+  return `<div class="skills"><h3>So lief es auf dieser Insel</h3><ul>${rows.map(r => `<li><span>${r.label}</span><b class="sk ${r.st[1]}">${r.st[0]}</b></li>`).join('')}</ul>
+    ${weak ? `<p class="tip"><b>Tipp:</b> ${weak.tip}</p>` : ''}
+    ${P.timeouts ? `<p class="tip">Die Sanduhr ist ${P.timeouts}-mal abgelaufen. Probier es mit weniger Wind.</p>` : ''}</div>`;
+}
+function showResults() {
+  stopTimer();
+  const id = P.isl.id, max = P.n * 3, base = P.results.slice(0, P.n).reduce((a, b) => a + b, 0), bonus = P.taler - base, r = base / max;
+  const stars = r >= .85 ? 3 : r >= .6 ? 2 : 1;
+  const before = new Set(ISL.filter(unlocked).map(i => i.id));
+  const pl = me(), prev = pl.prog[id] || {}, first = !prev.done;
+  pl.prog[id] = { done:true, stars:Math.max(prev.stars || 0, stars) };
+  pl.coins += P.taler; save(); updateHeader();
+  const fresh = ISL.filter(i => unlocked(i) && !before.has(i.id)).map(i => i.name);
+  const finished = first && allDone();
+  const title = finished ? 'Alle Inseln geschafft!' : id === 'm6' && first ? 'Der Schatz ist gehoben!' : stars === 3 ? 'Hervorragend, Kapitän!' : stars === 2 ? 'Gut gesegelt!' : 'Insel geschafft!';
+  const msg = finished ? `Du hast die ganze Seekarte erobert und Runde ${roundOf(pl)} gemeistert. Jetzt kannst du eine neue Runde starten.` : id === 'm6' && first ? 'Du hast alle sechs Inseln geschafft und den Schatz gefunden. Die Bonus-Felsen warten noch auf dich.' : stars === 3 ? 'Du kennst die Piratenregel richtig gut.' : stars === 2 ? 'Fast alles richtig. Spiel die Insel noch einmal und hol dir alle drei Sterne.' : 'Übung macht den Meister-Piraten. Versuch es gleich noch einmal!';
+  const starSvg = k => `<svg class="${k < stars ? 'on' : ''}" viewBox="0 0 24 24" aria-hidden="true"><use href="#star" fill="${k < stars ? '#ffc63f' : '#e2d8bf'}" stroke="${k < stars ? '#c98a06' : '#cbbf9f'}" stroke-width="1.2"/></svg>`;
+  $('#result').innerHTML = `<p style="font:800 1rem var(--font-display);color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase">${store.settings.profiles && pl.name ? esc(pl.name) + ' · ' : ''}${P.isl.name}</p>
+    <div class="bigstars" role="img" aria-label="${stars} von 3 Sternen">${[0,1,2].map(starSvg).join('')}</div>
+    <h2>${title}</h2><p>${msg}</p>
+    <div class="gain"><svg aria-hidden="true"><use href="#coin"/></svg>${base} von ${max} Goldtalern</div>
+    <div class="tally" aria-label="Goldtaler je Aufgabe">${P.results.slice(0, P.n).map((t, k) => `<span class="${t === 3 ? '' : t > 0 ? 'half' : 'miss'}">${k + 1}: ${t}</span>`).join('')}</div>
+    ${P.tasks.length > P.n ? `<p class="bottle-line">Flaschenpost: ${P.tasks.length - P.n} Aufgaben wiederholt, +${bonus} Goldtaler extra</p>` : ''}
+    ${skillsHTML()}
+    ${fresh.length ? `<p class="newland">Neu entdeckt: ${fresh.join(', ')}</p>` : ''}
+    <div class="row">${finished ? `<button class="btn" data-act="newround">Runde ${roundOf(pl) + 1} starten</button>` : ''}<button class="btn ${finished ? 'ghost' : ''}" data-act="tomap" ${finished ? 'style="color:var(--ink);border-color:#d9cba8"' : ''}>Zur Karte</button><button class="btn ghost" data-act="again" style="color:var(--ink);border-color:#d9cba8">Insel nochmal spielen</button></div>`;
+  show('result'); sfx(stars >= 2 ? 'win' : 'good');
+  const b = $('#result .btn'); if (b) b.focus({ preventScroll:true });
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.wind) { const pl = me(); if (pl && store.settings.kidsWind) { pl.wind = b.dataset.wind; save(); } renderMap(); return; }
+  const a = b.dataset.act;
+  switch (a) {
+    case 'isl': {
+      const i = byId(b.dataset.id);
+      if (!unlocked(i)) { toast(`${i.name} liegt noch im Nebel. Schaffe zuerst: ${blocker(i).name}.`); return; }
+      openOv(briefHTML(i.id), 'brief'); break;
+    }
+    case 'start': startIsland(b.dataset.id); break;
+    case 'close': closeOv(); refreshScreen(); break;
+    case 'settings': armed = ''; openOv(pinHTML(), 'pin'); break;
+    case 'help': openHelp('kids'); break;
+    case 'help-t': openHelp('teacher'); break;
+    case 'h-menu': openHelp(helpFrom); break;
+    case 'h-back': helpBack(); break;
+    case 'h-cards': openCards(0); break;
+    case 'h-card': openCards(b.dataset.v === 'all' ? 'all' : +b.dataset.v); break;
+    case 'h-info': openInfo(); break;
+    case 'h-tour':
+      if (helpFrom === 'teacher') { $('#ov-card').innerHTML = settingsHTML(); ovMode = 'settings'; $('#ov').scrollTop = 0; startTour(TOUR_T, () => { store.tourT = true; save(); }); }
+      else { closeOv(); if (screen === 'play') break; goMap(); startTour(TOUR_S, kidsTourDone); }
+      break;
+    case 'tour-next': if (tour) { tour.i++; tourStep(); } break;
+    case 'tour-back': if (tour) { tour.i--; tourStep(); } break;
+    case 'tour-end': endTour(); break;
+    case 'newround': P = null; newRound(); break;
+    case 'set-wind': store.settings.wind = b.dataset.v; Object.values(store.players).forEach(pl => delete pl.wind); save(); rerenderSettings(); break;
+    case 'set-count': store.settings.count = +b.dataset.v; save(); rerenderSettings(); break;
+    case 'unlock': store.settings.unlockAll = !store.settings.unlockAll; save(); rerenderSettings(); break;
+    case 'sound2': store.settings.sound = !store.settings.sound; save(); rerenderSettings(); updateSoundBtn(); break;
+    case 'kidswind': store.settings.kidsWind = !store.settings.kidsWind; save(); rerenderSettings(); break;
+    case 'profiles': store.settings.profiles = !store.settings.profiles; save(); rerenderSettings(); break;
+    case 'kidscreate': store.settings.kidsCreate = !store.settings.kidsCreate; save(); rerenderSettings(); break;
+    case 'sound': store.settings.sound = !store.settings.sound; save(); updateSoundBtn(); sfx('tap'); break;
+    case 'reset':
+      if (armed !== 'all') { armed = 'all'; rerenderSettings(); }
+      else { Object.values(store.players).forEach(pl => { pl.prog = {}; pl.coins = 0; }); store.settings.unlockAll = false; save(); armed = ''; rerenderSettings(); toast('Alle Spielstände sind gelöscht.'); }
+      break;
+    case 'p-reset': {
+      const pl = store.players[b.dataset.id]; if (!pl) break;
+      if (armed !== 'r' + pl.id) { armed = 'r' + pl.id; rerenderSettings(); }
+      else { pl.prog = {}; pl.coins = 0; delete pl.wind; save(); armed = ''; rerenderSettings(); toast(`${pl.name} startet wieder bei der ersten Insel.`); }
+      break;
+    }
+    case 'p-del': {
+      const pl = store.players[b.dataset.id]; if (!pl) break;
+      if (armed !== 'd' + pl.id) { armed = 'd' + pl.id; rerenderSettings(); }
+      else { delete store.players[pl.id]; store.order = store.order.filter(x => x !== pl.id); if (store.active === pl.id) store.active = null; save(); armed = ''; rerenderSettings(); toast(`Das Profil von ${pl.name} ist gelöscht.`); }
+      break;
+    }
+    case 'avpick':
+      draft.av = b.dataset.av;
+      b.closest('.avgrid').querySelectorAll('.avpick').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+      break;
+    case 'choose': store.active = b.dataset.id; save(); goMap(); break;
+    case 'newp': {
+      draft = { name:'', av:'parrot' };
+      openOv(`<h2>Neuer Pirat</h2>${newFormHTML('kid')}<div class="row" style="justify-content:flex-start"><button class="btn ghost" data-act="close">Abbrechen</button></div>`, 'newp');
+      const ni = $('#ov-card .tin'); if (ni) ni.focus();
+      break;
+    }
+    case 'switch': renderWho(); show('who'); break;
+    case 'fertig': fertig(); break;
+    case 'op': pickOp(+b.dataset.s); break;
+    case 'sop': pickStrich(+b.dataset.s); break;
+    case 'slot': chooseSlot(+b.dataset.s); break;
+    case 'key': press(b.dataset.k); break;
+    case 'judge': judge(b.dataset.j); break;
+    case 'why': why(b.dataset.w); break;
+    case 'next': next(); break;
+    case 'quit':
+      if (!P.quitArm) { P.quitArm = true; b.textContent = 'Wirklich abbrechen?'; setTimeout(() => { if (P && P.quitArm) { P.quitArm = false; b.textContent = 'Zur Karte'; } }, 3500); }
+      else { stopTimer(); P = null; goMap(); }
+      break;
+    case 'tomap': P = null; goMap(); break;
+    case 'again': { const id = P.isl.id; startIsland(id); break; }
+  }
+});
+$('#ov').addEventListener('click', e => { if (e.target.id === 'ov') { closeOv(); refreshScreen(); } });
+document.addEventListener('input', e => { if (e.target.matches('.npform .tin')) draft.name = e.target.value; });
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.id === 'pinform') {
+    const v = $('#pin-in').value.trim();
+    if (v === store.pin) { armed = ''; openTeacher(); }
+    else { const er = $('#pin-err'); er.textContent = 'Die PIN stimmt nicht. Versuch es noch einmal.'; er.hidden = false; $('#pin-in').value = ''; $('#pin-in').focus(); }
+  } else if (f.id === 'pinchange') {
+    const a = $('#pin-new').value.trim(), b2 = $('#pin-new2').value.trim(), er = $('#pinc-err');
+    if (!/^\d{4,6}$/.test(a)) { er.textContent = 'Die PIN muss aus 4 bis 6 Ziffern bestehen.'; er.hidden = false; return; }
+    if (a !== b2) { er.textContent = 'Die beiden Eingaben stimmen nicht überein.'; er.hidden = false; return; }
+    store.pin = a; save(); rerenderSettings(); toast('Die neue PIN ist gespeichert.');
+  } else if (f.classList.contains('npform')) {
+    const ctx = f.dataset.ctx, name = f.querySelector('.tin').value.trim().replace(/\s+/g, ' '), er = f.querySelector('.ferr');
+    if (!name) { er.textContent = 'Bitte gib einen Namen ein.'; er.hidden = false; f.querySelector('.tin').focus(); return; }
+    if (store.order.some(id => store.players[id].name.toLowerCase() === name.toLowerCase())) { er.textContent = `Den Namen „${name}“ gibt es schon. Häng zum Beispiel den ersten Buchstaben vom Nachnamen an.`; er.hidden = false; return; }
+    const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    store.players[id] = { id, name, av:draft.av, prog:{}, coins:0 }; store.order.push(id);
+    draft = { name:'', av:'parrot' };
+    if (ctx === 'kid') { store.active = id; save(); closeOv(); goMap(); toast(`Ahoi, ${name}! Leinen los!`); }
+    else { save(); rerenderSettings(); toast(`Das Profil für ${name} ist angelegt.`); }
+  }
+});
+document.addEventListener('keydown', e => {
+  if (tour) {
+    if (e.key === 'Escape') { e.preventDefault(); endTour(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); tour.i++; tourStep(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); tour.i--; tourStep(); }
+    return;
+  }
+  if (!$('#ov').hidden) { if (e.key === 'Escape') { closeOv(); refreshScreen(); } return; }
+  if (screen !== 'play' || !P) return;
+  const onBtn = e.target && e.target.tagName === 'BUTTON';
+  if (/^[0-9]$/.test(e.key) && inputPhase()) { e.preventDefault(); press(e.key); }
+  else if (e.key === 'Backspace' && inputPhase()) { e.preventDefault(); press('del'); }
+  else if (e.key === 'Enter' && inputPhase()) { e.preventDefault(); press('ok'); }
+  else if (e.key === 'Enter' && !onBtn && (P.phase === 'done' || P.phase === 'timeout')) { e.preventDefault(); next(); }
+  else if (e.key === 'Enter' && !onBtn && P.phase === 'pick') { e.preventDefault(); fertig(); }
+});
+
+$('#mini').innerHTML = boardStatic([18, '+', 4, '·', 6]);
+fillCredits();
+goMap();
+})();
+</script>
+
+</body>
+</html>
