@@ -7,7 +7,7 @@ Die Kinder segeln von Insel zu Insel, suchen die Punktrechnungen selbst, schreib
 ## Spielen
 
 - **Im Browser:** `index.html` per Doppelklick öffnen. Keine Installation, kein Konto.
-- **Online:** https://digital-tools-mg.github.io/Rechenpiraten-Kinderversion-/
+- **Online:** https://aurora-lernspiele.github.io/rechenpiraten/
 - Läuft auf PC, Tablet und Whiteboard.
 - **Als App:** Im Browser „Zum Startbildschirm hinzufügen“ bzw. „App installieren“ wählen. Danach läuft das Spiel auch ohne Internet.
 
@@ -31,7 +31,7 @@ Profile, Sterne und Goldtaler werden nur im Browser des jeweiligen Geräts gespe
 2. Alle Dateien aus diesem Ordner hochladen (`index.html`, `Kurzinfo.pdf`, `README.md`, `.nojekyll`).
 3. Im Repository: **Settings → Pages → Build and deployment → Source: Deploy from a branch**, Branch `main`, Ordner `/ (root)`, speichern.
 4. Nach ein bis zwei Minuten ist das Spiel erreichbar unter
-   `https://<benutzername>.github.io/rechenpiraten/`
+   `https://aurora-lernspiele.github.io/rechenpiraten/`
 
 ## Entwickler
 
