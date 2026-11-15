@@ -9,6 +9,7 @@ Die Kinder segeln von Insel zu Insel, suchen die Punktrechnungen selbst, schreib
 - **Im Browser:** `index.html` per Doppelklick öffnen. Keine Installation, kein Konto.
 - **Online:** https://digital-tools-mg.github.io/Rechenpiraten-Kinderversion-/
 - Läuft auf PC, Tablet und Whiteboard.
+- **Als App:** Im Browser „Zum Startbildschirm hinzufügen“ bzw. „App installieren“ wählen. Danach läuft das Spiel auch ohne Internet.
 
 ## Einstellungen dieser Version
 
