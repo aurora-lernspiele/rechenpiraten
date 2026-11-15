@@ -7,7 +7,7 @@ Die Kinder segeln von Insel zu Insel, suchen die Punktrechnungen selbst, schreib
 ## Spielen
 
 - **Im Browser:** `index.html` per Doppelklick öffnen. Keine Installation, kein Konto.
-- **Online:** über GitHub Pages (siehe unten).
+- **Online:** https://digital-tools-mg.github.io/Rechenpiraten-Kinderversion-/
 - Läuft auf PC, Tablet und Whiteboard.
 
 ## Einstellungen dieser Version
@@ -36,5 +36,7 @@ Profile, Sterne und Goldtaler werden nur im Browser des jeweiligen Geräts gespe
 
 Entwickelt von **Mathias Georgi** (MPS St. Blasius Dornburg).
 Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: mathias.georgi@mps-stblasius.de
+
+Aurora Lernspiele · Lizenz: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de) · Impressum im Spiel (ⓘ unten rechts) und in der Kurzinfo
 
 Kinderversion 1.0 · November 2026

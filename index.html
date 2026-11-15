@@ -356,6 +356,7 @@ body[data-screen="who"] .tools .coins{display:none}
 .rb-done span{color:#e8f7ec}
 .roundbar.tour-hl{background:var(--abyss);padding:6px 10px}
 .credit .mail{white-space:nowrap;user-select:all}
+.implink{background:none;border:none;padding:4px;margin-top:2px;font:inherit;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 <style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
@@ -658,7 +659,7 @@ function goMap() {
 function refreshScreen() { if (screen !== 'play') goMap(); }
 
 /* ---------- Entwicklerhinweis ---------- */
-const CREDIT = 'Die Rechenpiraten wurden entwickelt von <b>Mathias Georgi</b> (MPS St. Blasius Dornburg).<br>Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: <b class="mail">mathias.georgi@mps-stblasius.de</b>';
+const CREDIT = 'Die Rechenpiraten wurden entwickelt von <b>Mathias Georgi</b> (MPS St. Blasius Dornburg).<br>Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: <b class="mail">mathias.georgi@mps-stblasius.de</b><br><button class="implink" type="button" onclick="Impressum.open()">Impressum</button> · <a class="implink" href="Kurzinfo.pdf" target="_blank" rel="noopener">Kurzinfo für Lehrkräfte (PDF)</a>';
 const VERSION = 'Kinderversion 1.0 · November 2026';
 function fillCredits() { document.querySelectorAll('[data-credit]').forEach(e => { e.innerHTML = CREDIT; }); }
 
@@ -1411,5 +1412,187 @@ goMap();
 })();
 </script>
 
+<script>window.IMPRESSUM = { spiel: "Die Rechenpiraten – Kinderversion", version: "1.0.0", zielgruppe: "3. Klasse" };</script>
+<script>
+/*! Aurora-Impressum für Lernspiele · Mathias Georgi */
+(function () {
+  "use strict";
+
+  /* ======= STANDARDWERTE – gelten für alle Spiele ======= */
+  var STANDARD = {
+    spiel: "Lernspiel",
+    version: "1.0.0",
+    stand: "November 2026",
+    autor: "Mathias Georgi",
+    email: "mathias.georgi@mps-stblasius.de",
+    schule: "MPS St. Blasius, Dornburg",   // leer ("") = Schule nicht nennen
+    zielgruppe: "",                 // z. B. "5. Klasse" – leer = ausblenden
+    marke: "Aurora Lernspiele",     // Name unter dem Logo
+    theme: "nacht",                 // "nacht" (Polarnacht) | "morgen" | "glas"
+    button: true,                   // ⓘ-Button unten rechts einblenden
+    buttonPosition: "rechts",       // "rechts" | "links"
+    ki: "Idee, Konzept, Aufgaben und inhaltliche Prüfung: {autor}. Programmiert mit Unterstützung der KI Claude (Anthropic).",
+    datenschutz: "Keine Anmeldung, keine Cookies, kein Tracking. Es werden keine Daten an Server übertragen. Spielstände und Highscores bleiben nur lokal in diesem Browser gespeichert und lassen sich über die Browsereinstellungen jederzeit löschen.",
+    lizenzName: "CC BY-NC-SA 4.0",
+    lizenzLink: "https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de",
+    lizenz: "Nutzen, teilen und anpassen erlaubt – mit Namensnennung, nicht kommerziell und unter gleichen Bedingungen.",
+    haftung: "Das Spiel wurde sorgfältig erstellt; für Richtigkeit und Vollständigkeit der Inhalte wird dennoch keine Gewähr übernommen. Für Inhalte verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.",
+    nachweise: "Grafiken und Sounds selbst erstellt bzw. per Code erzeugt. Keine Fremdschriften.",
+    jahr: new Date().getFullYear()
+  };
+
+  var C = Object.assign({}, STANDARD, window.IMPRESSUM || {});
+  function fill(t) { return String(t).replace(/\{(\w+)\}/g, function (_, k) { return C[k] != null ? C[k] : ""; }); }
+  function esc(t) { return fill(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ======= AURORA-LOGO (SVG, ohne externe Dateien) ======= */
+  var uid = "au" + Math.random().toString(36).slice(2, 7);
+  function logo(size) {
+    return '<svg class="imp-logo" width="' + size + '" height="' + size + '" viewBox="0 0 120 120" aria-hidden="true">' +
+      '<defs>' +
+      '<linearGradient id="' + uid + 'sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050b24"/><stop offset=".65" stop-color="#0c1d4a"/><stop offset="1" stop-color="#123063"/></linearGradient>' +
+      '<linearGradient id="' + uid + 'a1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2cf5a6" stop-opacity="0"/><stop offset=".3" stop-color="#2cf5a6"/><stop offset=".7" stop-color="#3fd9e8"/><stop offset="1" stop-color="#8b6cff" stop-opacity=".2"/></linearGradient>' +
+      '<linearGradient id="' + uid + 'a2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8b6cff" stop-opacity=".1"/><stop offset=".45" stop-color="#b56cff"/><stop offset="1" stop-color="#ff6fb5" stop-opacity="0"/></linearGradient>' +
+      '<filter id="' + uid + 'blur" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="3.2"/></filter>' +
+      '<clipPath id="' + uid + 'clip"><rect width="120" height="120" rx="28"/></clipPath>' +
+      '</defs>' +
+      '<g clip-path="url(#' + uid + 'clip)">' +
+      '<rect width="120" height="120" fill="url(#' + uid + 'sky)"/>' +
+      '<g fill="#fff"><circle cx="18" cy="16" r="1"/><circle cx="96" cy="12" r="1.3"/><circle cx="74" cy="26" r=".8"/><circle cx="40" cy="9" r=".8"/><circle cx="106" cy="38" r=".9"/><circle cx="12" cy="44" r=".7"/></g>' +
+      '<path class="imp-band b1" d="M-10 64 C 20 30, 45 70, 70 40 S 110 24, 132 36" stroke="url(#' + uid + 'a1)" stroke-width="16" fill="none" filter="url(#' + uid + 'blur)"/>' +
+      '<path class="imp-band b2" d="M-10 50 C 25 22, 55 52, 82 26 S 118 18, 132 22" stroke="url(#' + uid + 'a2)" stroke-width="10" fill="none" filter="url(#' + uid + 'blur)" opacity=".85"/>' +
+      '<path class="imp-band b3" d="M-10 64 C 20 30, 45 70, 70 40 S 110 24, 132 36" stroke="#d6fff0" stroke-width="1.6" fill="none" opacity=".7"/>' +
+      '<path d="M0 120 L0 92 L22 74 L34 84 L52 62 L68 80 L80 70 L100 88 L120 78 L120 120 Z" fill="#071233"/>' +
+      '<path d="M52 62 L58 69 L54 68 L50 71 L47 67 Z M22 74 L27 78 L22 78 Z" fill="#cfe3ff" opacity=".8"/>' +
+      '<path d="M0 120 L0 104 L30 94 L60 102 L92 92 L120 100 L120 120 Z" fill="#030817"/>' +
+      '</g></svg>';
+  }
+
+  /* ======= STYLES ======= */
+  var css = '' +
+  '.imp-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(3,8,23,.62);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:0;transition:opacity .25s}' +
+  '.imp-overlay.imp-open{opacity:1}' +
+  '.imp-card{position:relative;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:24px;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Inter",sans-serif;transform:translateY(14px) scale(.98);transition:transform .3s cubic-bezier(.2,.9,.3,1.2);-webkit-font-smoothing:antialiased;text-align:left}' +
+  '.imp-open .imp-card{transform:none}' +
+  '.imp-card *{box-sizing:border-box}' +
+  '.imp-head{display:flex;gap:16px;align-items:center;padding:24px 24px 18px}' +
+  '.imp-head .imp-logo{flex:none;border-radius:24px}' +
+  '.imp-brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.75;margin:0 0 2px}' +
+  '.imp-card .imp-title{font-size:26px;font-weight:800;margin:0;letter-spacing:-.01em;line-height:1.1}' +
+  '.imp-game{margin:6px 0 0;font-weight:600;display:flex;flex-wrap:wrap;gap:6px;align-items:center}' +
+  '.imp-pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap}' +
+  '.imp-body{padding:4px 24px 8px;display:grid;gap:10px}' +
+  '.imp-sec{border-radius:16px;padding:12px 14px}' +
+  '.imp-sec h3{margin:0 0 3px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800}' +
+  '.imp-sec p{margin:0}' +
+  '.imp-sec a{font-weight:700;text-decoration:none}' +
+  '.imp-mail{display:inline-block;white-space:nowrap;font-size:clamp(13px,4.1vw,16px)}' +
+  '.imp-who{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline}.imp-who span{opacity:.8}' +
+  '.imp-cc{display:inline-block;font-size:12px;font-weight:800;padding:1px 9px;border-radius:999px;margin-bottom:4px;letter-spacing:.02em}' +
+  '.imp-t-nacht .imp-cc{background:#e8f0ff;color:#0a1538!important}.imp-t-morgen .imp-cc{background:#1b2440;color:#fff!important}.imp-t-glas .imp-cc{background:#fff;color:#1d1060!important;text-decoration:none!important}' +
+  '.imp-sec a:hover{text-decoration:underline}' +
+  '.imp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}' +
+  '@media (max-width:460px){.imp-grid{grid-template-columns:1fr}.imp-card .imp-title{font-size:22px}.imp-head .imp-logo{width:64px;height:64px}}' +
+  '.imp-ki{display:flex;gap:10px;align-items:flex-start}' +
+  '.imp-ki .imp-spark{flex:none;font-size:18px;line-height:1.2}' +
+  '.imp-foot{padding:12px 24px 22px;font-size:12px;opacity:.75;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}' +
+  '.imp-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:0;cursor:pointer;font-size:20px;line-height:38px;text-align:center;padding:0}' +
+  '.imp-fab{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:99998;width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.7);cursor:pointer;padding:0;overflow:hidden;box-shadow:0 4px 16px rgba(5,11,36,.35);background:#050b24;transition:transform .2s}' +
+  '.imp-fab:hover{transform:scale(1.08)}' +
+  '.imp-fab .imp-logo{display:block;width:100%;height:100%}' +
+  '.imp-fab span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font:800 18px/1 Georgia,serif;font-style:italic;text-shadow:0 1px 4px #000}' +
+  '@keyframes impWave{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}' +
+  '.imp-band{animation:impWave 6s ease-in-out infinite}.imp-band.b2{animation-duration:8s;animation-delay:-2s}' +
+  '@media (prefers-reduced-motion:reduce){.imp-band,.imp-card,.imp-overlay{animation:none;transition:none}}' +
+
+  /* Polarnacht */
+  '.imp-t-nacht{color:#e8f0ff;background:radial-gradient(120% 60% at 20% 0%,rgba(44,245,166,.22),transparent 60%),radial-gradient(100% 60% at 90% 10%,rgba(181,108,255,.25),transparent 60%),linear-gradient(180deg,#0a1538,#050b24);box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 0 1px rgba(140,180,255,.18)}' +
+  '.imp-t-nacht .imp-title{background:linear-gradient(90deg,#7dffcf,#5fe3ff 45%,#c59bff);-webkit-background-clip:text;background-clip:text;color:transparent}' +
+  '.imp-t-nacht .imp-pill{background:rgba(44,245,166,.16);color:#7dffcf;box-shadow:inset 0 0 0 1px rgba(44,245,166,.4)}' +
+  '.imp-t-nacht .imp-pill.alt{background:rgba(181,108,255,.16);color:#d6b8ff;box-shadow:inset 0 0 0 1px rgba(181,108,255,.4)}' +
+  '.imp-t-nacht .imp-sec{background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}' +
+  '.imp-t-nacht .imp-sec h3{color:#5fe3ff}' +
+  '.imp-t-nacht .imp-sec a{color:#7dffcf}' +
+  '.imp-t-nacht .imp-sec.imp-kibox{background:linear-gradient(100deg,rgba(44,245,166,.12),rgba(181,108,255,.14));box-shadow:inset 0 0 0 1px rgba(140,200,255,.22)}' +
+  '.imp-t-nacht .imp-close{background:rgba(255,255,255,.08);color:#e8f0ff}';
+
+  /* ======= HTML ======= */
+  function sec(titel, inhalt, extra) {
+    return '<section class="imp-sec ' + (extra || "") + '"><h3>' + titel + "</h3>" + inhalt + "</section>";
+  }
+  function build(theme) {
+    var mail = "mailto:" + C.email + "?subject=" + encodeURIComponent("Rückmeldung zu " + C.spiel + " (v" + C.version + ")");
+    var pills = '<span class="imp-pill">Version ' + esc(C.version) + "</span>" +
+      (C.zielgruppe ? '<span class="imp-pill alt">' + esc(C.zielgruppe) + "</span>" : "");
+    return '' +
+      '<div class="imp-card imp-t-' + theme + '" role="dialog" aria-modal="true" aria-labelledby="imp-title">' +
+      '<button class="imp-close" aria-label="Schließen">×</button>' +
+      '<header class="imp-head">' + logo(76) +
+        '<div><p class="imp-brand">' + esc(C.marke) + '</p><h2 class="imp-title" id="imp-title">Impressum</h2>' +
+        '<p class="imp-game">' + esc(C.spiel) + " " + pills + "</p></div></header>" +
+      '<div class="imp-body">' +
+        sec("Entwicklung &amp; Kontakt",
+          '<p class="imp-who"><strong>' + esc(C.autor) + "</strong>" + (C.schule ? "<span>" + esc(C.schule) + "</span>" : "") + "</p>" +
+          '<p><a class="imp-mail" href="' + mail + '">' + esc(C.email) + "</a></p><p><small>Fehler gefunden? Ideen? Gerne melden!</small></p>") +
+        sec("Mit KI entwickelt", '<div class="imp-ki"><span class="imp-spark">✨</span><p>' + esc(C.ki) + "</p></div>", "imp-kibox") +
+        sec("Datenschutz", "<p>" + esc(C.datenschutz) + "</p>") +
+        '<div class="imp-grid">' +
+          sec("Nutzung &amp; Lizenz", (C.lizenzName ? '<a class="imp-cc" href="' + C.lizenzLink + '" target="_blank" rel="noopener">' + esc(C.lizenzName) + "</a>" : "") + "<p>" + esc(C.lizenz) + "</p>") +
+          sec("Haftung", "<p>" + esc(C.haftung) + "</p>") +
+        "</div>" +
+        (C.nachweise ? sec("Nachweise", "<p>" + esc(C.nachweise) + "</p>") : "") +
+      "</div>" +
+      '<footer class="imp-foot"><span>© ' + esc(C.jahr) + " " + esc(C.autor) + "</span><span>Stand: " + esc(C.stand) + " · v" + esc(C.version) + "</span></footer>" +
+      "</div>";
+  }
+
+  /* ======= LOGIK ======= */
+  function injectCSS() {
+    if (document.getElementById("imp-style")) return;
+    var s = document.createElement("style"); s.id = "imp-style"; s.textContent = css;
+    document.head.appendChild(s);
+  }
+  var overlay = null, lastFocus = null;
+  function open(theme) {
+    injectCSS();
+    if (overlay) close(true);
+    lastFocus = document.activeElement;
+    overlay = document.createElement("div");
+    overlay.className = "imp-overlay";
+    overlay.innerHTML = build(theme || C.theme);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    overlay.querySelector(".imp-close").addEventListener("click", function () { close(); });
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(overlay);
+    requestAnimationFrame(function () { overlay.classList.add("imp-open"); overlay.querySelector(".imp-close").focus(); });
+  }
+  function close(sofort) {
+    if (!overlay) return;
+    var o = overlay; overlay = null;
+    document.removeEventListener("keydown", onKey);
+    if (sofort) { o.remove(); return; }
+    o.classList.remove("imp-open");
+    setTimeout(function () { o.remove(); }, 250);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  function onKey(e) { if (e.key === "Escape") close(); }
+
+  function addButton() {
+    if (!C.button) return;
+    injectCSS();
+    var b = document.createElement("button");
+    b.className = "imp-fab"; b.title = "Impressum"; b.setAttribute("aria-label", "Impressum öffnen");
+    b.style[C.buttonPosition === "links" ? "left" : "right"] = "14px";
+    b.innerHTML = logo(44) + "<span>i</span>";
+    b.addEventListener("click", function () { open(); });
+    document.body.appendChild(b);
+  }
+
+  window.Impressum = { open: open, close: close, config: C, logo: logo,
+    html: function (theme) { injectCSS(); return build(theme || C.theme); } };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", addButton);
+  else addButton();
+})();
+</script>
 </body>
 </html>
