@@ -666,7 +666,7 @@ function goMap() {
 function refreshScreen() { if (screen !== 'play') goMap(); }
 
 /* ---------- Entwicklerhinweis ---------- */
-const CREDIT = 'Die Rechenpiraten wurden entwickelt von <b>Mathias Georgi</b> (MPS St. Blasius Dornburg).<br>Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: <b class="mail">mathias.georgi@mps-stblasius.de</b><br><button class="implink" type="button" onclick="Impressum.open()">Impressum</button> · <a class="implink" href="Kurzinfo.pdf" target="_blank" rel="noopener">Kurzinfo für Lehrkräfte (PDF)</a>';
+const CREDIT = 'Die Rechenpiraten wurden entwickelt von <b>Mathias Georgi</b> (Weilburg).<br>Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: <b class="mail">mathias.georgi@mps-stblasius.de</b><br><button class="implink" type="button" onclick="Impressum.open()">Impressum</button> · <a class="implink" href="Kurzinfo.pdf" target="_blank" rel="noopener">Kurzinfo für Lehrkräfte (PDF)</a>';
 const VERSION = 'Kinderversion 1.0 · November 2026';
 function fillCredits() { document.querySelectorAll('[data-credit]').forEach(e => { e.innerHTML = CREDIT; }); }
 
@@ -1432,7 +1432,7 @@ goMap();
     stand: "November 2026",
     autor: "Mathias Georgi",
     email: "mathias.georgi@mps-stblasius.de",
-    schule: "MPS St. Blasius, Dornburg",   // leer ("") = Schule nicht nennen
+    schule: "Weilburg",   // leer ("") = Schule nicht nennen
     zielgruppe: "",                 // z. B. "5. Klasse" – leer = ausblenden
     marke: "Aurora Lernspiele",     // Name unter dem Logo
     theme: "nacht",                 // "nacht" (Polarnacht) | "morgen" | "glas"

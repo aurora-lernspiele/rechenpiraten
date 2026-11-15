@@ -35,7 +35,7 @@ Profile, Sterne und Goldtaler werden nur im Browser des jeweiligen Geräts gespe
 
 ## Entwickler
 
-Entwickelt von **Mathias Georgi** (MPS St. Blasius Dornburg).
+Entwickelt von **Mathias Georgi** (Weilburg).
 Rückmeldungen, Fehlerhinweise und Ideen sind jederzeit willkommen: mathias.georgi@mps-stblasius.de
 
 Aurora Lernspiele · Lizenz: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de) · Impressum im Spiel (ⓘ unten rechts) und in der Kurzinfo

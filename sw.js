@@ -1,6 +1,6 @@
 /* Die Rechenpiraten – Offline-Speicher.
    Bei jedem Update der Spieldatei die Versionsnummer erhöhen, damit alle Geräte die neue Fassung laden. */
-const VERSION = "rechenpiraten-v1";
+const VERSION = "rechenpiraten-v2";
 const FONTS = "rechenpiraten-fonts";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-64.png", "./Kurzinfo.pdf"];
 
